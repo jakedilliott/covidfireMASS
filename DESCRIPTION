@@ -1,0 +1,27 @@
+Package: covidfireMASS
+Title: Agent-Based Model For COVID-19 Dynamics In A Wildfire Season
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Jake",
+           family = "Dilliott",
+           role = c("aut", "cre"),
+           email = "jdilliott@protonmail.com",
+           comment = c(ORCID = "0000-0002-1069-4005"))
+Description: This agent-based model implements module based infection dynamics
+    based on the hub-and-spoke camp protocol. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports:
+    dplyr,
+    stringr,
+    tidyr,
+    purrr
+Suggests: 
+    testthat (>= 3.0.0),
+    furrr
+Config/testthat/edition: 3
+Depends: 
+    R (>= 2.10)
