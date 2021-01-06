@@ -4,7 +4,7 @@
 \alias{mv_agents}
 \title{Move agents between fires}
 \usage{
-mv_agents(agent_df, inc_req, mod_req, t, eir = NULL)
+mv_agents(agent_df, inc_req, mod_req, t, eir = 0)
 }
 \arguments{
 \item{agent_df}{data frame containing agent data}

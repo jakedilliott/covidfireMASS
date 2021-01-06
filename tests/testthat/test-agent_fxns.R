@@ -17,11 +17,13 @@ test_that("mk_agents returns the correct dimensions", {
 })
 
 test_that("mk_agents returns the correct outputs", {
-  expect_equal(colnames(agent_df), c("res_id", "res_gacc", "inc_id",
-                                     "mod_id", "module", "role",
-                                     "state", "q_status", "days_q"))
-  expect_equal(unique(agent_df$mod_id), c('O-1', 'O-2', 'E-3', 'C-4', '0'))
-  expect_equal(unique(agent_df$module), c('O-1', 'E-3', 'C-4', '0'))
+  expect_equal(colnames(agent_df), c(
+    "res_id", "res_gacc", "inc_id",
+    "mod_id", "module", "role",
+    "state", "q_status", "days_q"
+  ))
+  expect_equal(unique(agent_df$mod_id), c("O-1", "O-2", "E-3", "C-4", "0"))
+  expect_equal(unique(agent_df$module), c("O-1", "E-3", "C-4", "0"))
   expect_equal(unique(agent_df$inc_id), c(1, 0))
   expect_equal(agent_df[, 3], faux_incidents[, 4], ignore_attr = TRUE)
   expect_equal(agent_df[, 4], faux_modules[, 4], ignore_attr = TRUE)
@@ -70,7 +72,7 @@ test_that("assign_roles handles incorrect inputs", {
 test_that("assign_roles has correct outputs", {
   expect_equal(dim(assign_roles(agent_df)), dim(agent_df))
   expect_equal(colnames(assign_roles(agent_df)), colnames(agent_df))
-  expect_setequal(unique(assign_roles(agent_df)$role), c(0,1))
+  expect_setequal(unique(assign_roles(agent_df)$role), c(0, 1))
   expect_equal(length(which(assign_roles(agent_df)$role == 1)), 3)
 })
 
@@ -88,9 +90,12 @@ test_that("mv_agents handles incorrect inputs", {
 })
 
 test_that("mv_agents outputs the correct dimensions", {
-  expect_equal(dim(mv_agents(agent_df, faux_incidents, faux_modules, 3, 0.01)),
-               dim(agent_df))
-  expect_equal(mv_agents(agent_df, faux_incidents, faux_modules, 3, 0.01)[, 1:2],
-               agent_df[, 1:2])
+  expect_equal(
+    dim(mv_agents(agent_df, faux_incidents, faux_modules, 3, 0.01)),
+    dim(agent_df)
+  )
+  expect_equal(
+    mv_agents(agent_df, faux_incidents, faux_modules, 3, 0.01)[, 1:2],
+    agent_df[, 1:2]
+  )
 })
-
