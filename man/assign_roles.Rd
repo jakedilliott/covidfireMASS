@@ -4,9 +4,11 @@
 \alias{assign_roles}
 \title{Assign roles to agents}
 \usage{
-assign_roles(agent_df)
+assign_roles(df_in, n)
 }
 \arguments{
+\item{n}{number of leads per module}
+
 \item{agent_df}{data frame containing agent data}
 }
 \description{

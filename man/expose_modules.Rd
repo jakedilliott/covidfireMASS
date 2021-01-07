@@ -4,12 +4,20 @@
 \alias{expose_modules}
 \title{Exposes agents based on assigned modules}
 \usage{
-expose_modules(inc_df, params)
+expose_modules(inc_df, new_df, BA, BI, exp_thres, delta_t)
 }
 \arguments{
-\item{inc_df}{data frame containing agent data for a single inc}
+\item{inc_df}{Single incident data frame. The template for calculating the new data frame.}
 
-\item{params}{list of parameters for infection dynamics}
+\item{new_df}{The data frame to be modified}
+
+\item{BA}{Beta A}
+
+\item{BI}{Beta I}
+
+\item{exp_thres}{How many exposures before infection, default is 1.}
+
+\item{delta_t}{Time step}
 }
 \description{
 Exposes agents based on assigned modules

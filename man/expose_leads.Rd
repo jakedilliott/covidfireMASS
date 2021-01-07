@@ -4,12 +4,20 @@
 \alias{expose_leads}
 \title{Exposes agents based on assigned roles}
 \usage{
-expose_leads(inc_df, params)
+expose_leads(inc_df, new_df, BI, BA, exp_thres, delta_t)
 }
 \arguments{
-\item{inc_df}{data frame containing agent data for a single inc}
+\item{inc_df}{Single incident data frame. The template for calculating the new data frame.}
 
-\item{params}{list of parameters for infection dynamics}
+\item{new_df}{The data frame to be modified}
+
+\item{BI}{Beta I}
+
+\item{BA}{Beta A}
+
+\item{exp_thres}{How many exposures before infection, default is 1.}
+
+\item{delta_t}{Time step}
 }
 \description{
 Exposes agents based on assigned roles
