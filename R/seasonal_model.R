@@ -82,12 +82,16 @@ seasonal_sim <- function(inc_data, mod_data, incl_A = TRUE, De = 5,
 
     # state changes ----
     # random rolls
+    rE <- runif(N) # draw for exposure
     rI <- runif(N) # draw to become infective
     rS <- runif(N) # draw to become symptomatic
     rQ <- runif(N) # getting caught and moving to quarantine
     rR <- runif(N) # draw to recover
     pRecover   <- 1 - exp(-1/gamma * delta_t) # p of recovery
     pInfective <- 1 - exp(-1/gamma * delta_t) # p of becoming infective
+
+    # Agents that have changed incidents can be infected during mobilization
+    new_df$state[which(agent_df$inc_id != new$inc_id && rE < eir)] <- 1
 
     # After incubation period Exposed move to Infected or Asymptomatic
     new_df$state[which(agent_df$state == 1 && rI < pInfective && rS < pI)] <- 2
