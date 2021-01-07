@@ -1,6 +1,5 @@
 #' Group overhead modules into 1 module
 #' @param agent_df data frame containing firefighter agents data
-#'
 clean_mods <- function(agent_df) {
   new_df <- agent_df
   index_overhead <- grepl("^O-\\d", agent_df[["mod_id"]])
@@ -28,7 +27,7 @@ assign_roles <- function(df_in, n) {
           new_leads <- sample(nrow(module), n - leads)
           new_module[["role"]][new_leads] <- 1
         } else if (leads > n) {
-          no_longer_leads <- sample(which(module[["role"]]==1), leads - n)
+          no_longer_leads <- sample(which(module[["role"]] == 1), leads - n)
           new_module[["role"]][no_longer_leads] <- 0
         }
 
