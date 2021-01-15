@@ -1,9 +1,9 @@
 #' Module based quarantine operations
 #' @param inc_df data frame containing the data for a single incident
 #' @param new_df data frame to be modified
-
+#' @export
 modular_quarantine <- function(inc_df, new_df) {
-  if (inf_df[["inc_id"]][1] > 0){
+  if (inc_df[["inc_id"]][1] > 0){
     inc_split <- split(inc_df, inc_df[["mod_id"]])
     new_split <- split(new_df, new_df[["mod_id"]])
 

@@ -9,6 +9,8 @@ mv_agents(agent_df, new_df, inc_req, mod_req, t, eir)
 \arguments{
 \item{agent_df}{data frame containing agent data}
 
+\item{new_df}{data frame to be modified}
+
 \item{inc_req}{data frame containing incident requests for agents}
 
 \item{mod_req}{data frame containing module requests for agents}

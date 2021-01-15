@@ -8,6 +8,8 @@ clean_gacc(data, inc_info)
 }
 \arguments{
 \item{data}{Daily res data frame to clean up}
+
+\item{inc_info}{Data frame containing information on all he incidents in a season}
 }
 \description{
 Clean up res_gaccs == "None"

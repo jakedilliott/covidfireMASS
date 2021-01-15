@@ -7,9 +7,9 @@
 assign_roles(df_in, n)
 }
 \arguments{
-\item{n}{number of leads per module}
+\item{df_in}{data frame containing agent data}
 
-\item{agent_df}{data frame containing agent data}
+\item{n}{number of leads per module}
 }
 \description{
 Assign roles to agents

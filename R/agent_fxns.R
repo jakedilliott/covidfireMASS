@@ -1,52 +1,74 @@
+
 #' Group overhead modules into 1 module
 #' @param agent_df data frame containing firefighter agents data
-clean_mods <- function(agent_df) {
-  new_df <- agent_df
-  index_overhead <- grepl("^O-\\d", agent_df[["mod_id"]])
+#' @export
+clean_mods <- function(mod_id_list) {
+  overhead <- grepl("^O-\\d", as.vector(mod_id_list))
+  mod_id_list[overhead] <- "O-100"
 
-  if (length(index_overhead) > 0) {
-    new_df[["mod_id"]][index_overhead] <- "O-100"
-  }
+  as.character(mod_id_list)
+}
 
-  new_df
+unique_mod_split <- function(input_df) {
+  split_by_inc <- split(input_df, input_df[["inc_id"]])
+
+  split_by_mod <- lapply(split_by_inc,
+                         function(x) {
+                           split(x, x[["mod_id"]])
+                         })
+
+  unlist(split_by_mod, recursive = FALSE)
 }
 
 #' Assign roles to agents
-#' @param agent_df data frame containing agent data
-#' @param n number of leads per module
-assign_roles <- function(df_in, n) {
-  if (df_in[["inc_id"]][1] > 0) {
-    inc_split <- split(df_in, df_in[["mod_id"]])
+#' @param mod_df_list data frame containing agent data
+#' @param n_leads number of leads per module
+#' @export
+assign_roles <- function(input_df, n_leads) {
 
-    new_df <- purrr::map_dfr(
-      inc_split,
-      function(module, new_module) {
-        leads <- length(which(module[["role"]] == 1))
+  split_by_mod <- unique_mod_split(input_df)
 
-        if (leads < n) {
-          new_leads <- sample(nrow(module), n - leads)
-          new_module[["role"]][new_leads] <- 1
-        } else if (leads > n) {
-          no_longer_leads <- sample(which(module[["role"]] == 1), leads - n)
-          new_module[["role"]][no_longer_leads] <- 0
+  new_modules <- lapply(
+    split_by_mod,
+    function(module) {
+      if (module$inc_id[1]>0) {
+        N <- nrow(module)
+        current_leads <- length(which(module$role > 0))
+
+        if (N < n_leads) {
+          module$role <- 1
+        } else {
+          if (current_leads < n_leads) {
+            module$role[sample(N, n_leads - current_leads)] <- 1
+          } else if (current_leads > n_leads) {
+            module$role[sample(N, current_leads - n_leads)] <- 0
+          }
         }
-
-        new_module
       }
-    )
-    return(new_df)
-  } else {
-    return(new_df)
-  }
+      module
+    })
+  dplyr::bind_rows(new_modules)
+}
+
+mk_agents <- function(inc_data, mod_data, day) {
+  data.frame(res_id = inc_data[["res_id"]],
+             res_gacc = inc_data[["res_gacc"]],
+             inc_id = inc_data[[day]],
+             mod_id = clean_mods(mod_data[[day]]),
+             role = 0,
+             state = 0,
+             q_status = 0,
+             q_days = 0)
 }
 
 #' Move agents between fires
 #' @param agent_df data frame containing agent data
+#' @param new_df data frame to be modified
 #' @param inc_req data frame containing incident requests for agents
 #' @param mod_req data frame containing module requests for agents
 #' @param t numeric time value
 #' @param eir Entry Infection Rate, numeric 0<=x<=1, or NULL
-
+#' @export
 mv_agents <- function(agent_df, new_df,
                       inc_req, mod_req, t, eir) {
   sapply(list(agent_df, inc_req, mod_req),

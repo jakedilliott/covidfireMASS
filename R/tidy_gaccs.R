@@ -30,6 +30,7 @@ find_first_mob <- function(res_data) {
 
 #' Clean up res_gaccs == "None"
 #' @param data Daily res data frame to clean up
+#' @param inc_info Data frame containing information on all the incidents in a season
 #' @export
 clean_gacc <- function(data, inc_info) {
   missing_gacc <- which(data$res_gacc == "None")
