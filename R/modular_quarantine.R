@@ -1,23 +1,22 @@
 #' Module based quarantine operations
-#' @param inc_df data frame containing the data for a single incident
-#' @param new_df data frame to be modified
+#' @param input_list list of data frames split by fire module
 #' @export
-modular_quarantine <- function(inc_df, new_df) {
-  if (inc_df[["inc_id"]][1] > 0){
-    inc_split <- split(inc_df, inc_df[["mod_id"]])
-    new_split <- split(new_df, new_df[["mod_id"]])
+modular_quarantine <- function(input_list, pIR, pAQ) {
+  out <- lapply(
+    input_list,
+    function(module) {
+      rQ <- runif(nrow(module))
 
-    new_df <- purrr::map2_dfr(
-      inc_split, new_split,
-      function(module, new_module) {
-        if (length(which(module$q_status == 1)) > 0) {
-          new_module$q_status <- 1
+      nQ <- length(which((module$state == 2 && rQ < 1-pIR) || (module$state == 4 && rQ < pAQ)))
+
+      if ((nQ) > 0) {
+        if ("O-100" %in% module$mod_id) {
+          module$res_id[which((module$state == 2 && rQ < 1-pIR) || (module$state == 4 && rQ < pAQ))]
+        } else {
+          module$res_id
         }
-        new_module
       }
-    )
-    return(new_df)
-  } else {
-    return(new_df)
-  }
+    }
+  )
+  as.vector(unlist(out))
 }

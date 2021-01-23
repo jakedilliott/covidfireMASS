@@ -1,29 +1,25 @@
 # exposure functions
 
-which_exposed <- function(input_df, BA, BI, exp_thres = 1, delta_t) {
-  split_by_mod <- unique_mod_split(input_df)
-
-  out <- purrr::map(
-    split_by_mod,
+which_exposed <- function(input_list, BA, BI, exp_thres = 0, delta_t) {
+  out <- lapply(
+    input_list,
     function(module) {
       if (module$inc_id[1] > 0){
-        N <- length(which(module$q_status == 0))
+        S <- length(which(module$q_status == 0))
         I <- length(which(module$state == 2 & module$q_status == 0))
         A <- length(which(module$state == 4 & module$q_status == 0))
-        if (N > 1) {cat(paste0(module$inc_id[1], module$mod_id[1], "\n"))}
         if (I + A > 0) {
-          cat(paste0(module$inc_id[1], module$mod_id[1], "N:", N, "/ I:", I, "/ A:", A, "\n"))
-          avg_inf_contacted <- (BI*I + BA*A) * delta_t / N
-          vnum_inf_contacted <- stats::rpois(nrow(module), avg_inf_contacted)
+        avg_inf_contacts <- (BI*I + BA*A) * delta_t / S
+        vnum_inf_contacted <- stats::rpois(nrow(module), avg_inf_contacts)
 
-          print(module$res_id[which(module$state == 0 &
-                                      module$module$q_status == 0 &
-                                      vnum_inf_contacted > exp_thres)])
+        module$res_id[which(module$state == 0 &
+                              module$q_status == 0 &
+                              vnum_inf_contacted > exp_thres)]
         }
       }
     }
   )
-  unlist(out, recursive = FALSE)
+  as.vector(unlist(out))
 }
 
 #' Exposes agents based on assigned modules
@@ -60,22 +56,19 @@ expose_modules <- function(inc_df, new_df, BA, BI, exp_thres, delta_t) {
 }
 
 #' Exposes agents based on assigned roles
-#' @param inc_df Single incident data frame. The template for calculating the new data frame.
-#' @param new_df The data frame to be modified
+#' @param input_df Single incident data frame. The template for calculating the new data frame
 #' @param BI Beta I
 #' @param BA Beta A
 #' @param exp_thres How many exposures before infection, default is 1.
 #' @param delta_t Time step
 
-expose_leads <- function(inc_df, new_df, BI, BA, exp_thres, delta_t) {
-  I <- length(which(inc_df[["role"]] == 1 && inc_df[["q_status"]] == 0 && inc_df[["state"]] == 2))
-  A <- length(which(inc_df[["role"]] == 1 && inc_df[["q_status"]] == 0 && inc_df[["state"]] == 4))
-  N <- length(which(inc_df[["role"]] == 1 && inc_df[["q_status"]] == 0))
-  avg_inf_contacted <- (BI * I + BA * A) * delta_t / N
-  vnum_inf_contacted <- stats::rpois(nrow(inc_df), avg_inf_contacted)
+expose_leads <- function(input_df, BI, BA, exp_thres, delta_t) {
+  I <- length(which(input_df$role == 1 & input_df$q_status == 0 & input_df$state == 2))
+  A <- length(which(input_df$role == 1 & input_df$q_status == 0 & input_df$state == 4))
+  N <- length(which(input_df$role == 1 & input_df$q_status == 0))
+  avg_inf_contacted <- (BI*I + BA*A) * delta_t / N
+  vnum_inf_contacted <- stats::rpois(nrow(input_df), avg_inf_contacted)
 
-  new_df[["state"]][which(inc_df[["role"]] == 1 && inc_df[["q_status"]] == 0 &&
-    inc_df[["state"]] == 0 && vnum_inf_contacted > exp_thres)] <- 1
-
-  new_df
+  input_df$res_id[which(input_df$role == 1 & input_df$q_status == 0 &
+    input_df$state == 0 & vnum_inf_contacted > exp_thres)] <- 1
 }

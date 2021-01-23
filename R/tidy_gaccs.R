@@ -39,6 +39,7 @@ clean_gacc <- function(data, inc_info) {
     first_mobs <- find_first_mob(data[missing_gacc, ])
     # change inc_id into inc_gacc
     new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
+    print(new_res_gacc)
     # assign the inc_gacc to their res_gacc
     data$res_gacc[missing_gacc] <- new_res_gacc
     return(data)
