@@ -21,84 +21,56 @@ unique_mod_split <- function(input_df) {
 }
 
 #' Assign roles to agents
-#' @param mod_df_list data frame containing agent data
-#' @param n_leads number of leads per module
+#' @param input_df data frame containing agent data
+#' @param max_leads number of leads per module
 #' @export
-assign_roles <- function(input_df, n_leads) {
+assign_roles <- function(input_df, max_leads) {
+  split_df <- split(input_df, paste0(input_df$inc_id, ".", input_df$mod_id))
 
-  split_by_mod <- unique_mod_split(input_df)
+  out <- lapply(
+    split_df,
+    function(mod_df) {
+      # only assign roles to agents on a fire
+      if (mod_df$inc_id[1] == 0) {
+        mod_df$leader <- FALSE
+      } else {
+        total <- nrow(input_df)
+        num_leads <- length(which(mod_df$leader))
 
-  new_modules <- lapply(
-    split_by_mod,
-    function(module) {
-      if (module$inc_id[1]>0) {
-        N <- nrow(module)
-        current_leads <- length(which(module$role > 0))
-
-        if (N < n_leads) {
-          module$role <- 1
-        } else {
-          if (current_leads < n_leads) {
-            module$role[sample(N, n_leads - current_leads)] <- 1
-          } else if (current_leads > n_leads) {
-            module$role[sample(N, current_leads - n_leads)] <- 0
+        if (total <= max_leads) { # agents in module <= max leads
+          mod_df$leader <- TRUE
+        } else { # more agents than desired leads
+          if (num_leads > max_leads) { # too many leaders, this should always fail
+            to_demote <- sample(which(mod_df$leader), num_leads - max_leads)
+            mod_df$leader[to_demote] <- FALSE
+          } else if (num_leads < max_leads) { # too few leaders
+            non_leads <- which(!mod_df$leader)
+            to_promote <- if (length(non_leads) > max_leads - num_leads) {
+              sample(non_leads, max_leads - num_leads)
+            } else {
+              non_leads
+            }
+            mod_df$leader[to_promote] <- TRUE
           }
         }
       }
-      module
-    })
-  dplyr::bind_rows(new_modules)
+      return(mod_df$res_id[mod_df$leader]) # lapply output
+    }
+  )
+  return(as.numeric(unlist(out))) # final
 }
 
 mk_agents <- function(inc_data, mod_data, day) {
-  data.frame(res_id = inc_data[["res_id"]],
-             res_gacc = inc_data[["res_gacc"]],
-             inc_id = inc_data[[day]],
-             mod_id = clean_mods(mod_data[[day]]),
-             role = 0,
-             state = 0,
-             q_status = 0,
-             q_days = 0)
-}
+  total <- nrow(inc_data)
 
-#' Move agents between fires
-#' @param agent_df data frame containing agent data
-#' @param new_df data frame to be modified
-#' @param inc_req data frame containing incident requests for agents
-#' @param mod_req data frame containing module requests for agents
-#' @param t numeric time value
-#' @param eir Entry Infection Rate, numeric 0<=x<=1, or NULL
-#' @export
-mv_agents <- function(agent_df, new_df,
-                      inc_req, mod_req, t, eir) {
-  sapply(list(agent_df, inc_req, mod_req),
-         function(x) {
-           if (!is.data.frame(x)) {
-             stop(paste0("Input '", x, "' is not a data frame"))
-           }
-         })
-
-  if (!is.numeric(t)) {
-    stop("Input 't' is not numeric")
-  }
-  if (!is.numeric(eir)) {
-    stop("Input 'eir' is not numeric")
-  }
-  if (eir < 0 | eir >= 1) {
-    stop("eir must be between 0 and 1")
-  }
-
-  new_df <- agent_df
-  new_df$inc_id <- dplyr::pull(inc_req, t + 2)
-  new_df$mod_id <- dplyr::pull(mod_req, t + 2)
-
-  new_df$role[which(new_df$inc_id != agent_df$inc_id)] <- 0
-  new_df <- clean_mods(new_df)
-
-  if (!is.null(eir)) {
-    probE <- stats::runif(nrow(agent_df))
-    new_df$state[which(agent_df$state == 0 & agent_df$inc_id != new_df$inc_id & probE < eir)]
-  }
-
-  new_df
+  data.frame(
+    res_id = inc_data[["res_id"]],
+    res_gacc = inc_data[["res_gacc"]],
+    inc_id = inc_data[[day + 2]], # first 2 columns are res_id & res_gacc
+    mod_id = mod_data[[day + 2]],
+    leader = vector("logical", total),
+    state = "S",
+    quarantine = vector("logical", total),
+    q_days = 0
+    )
 }

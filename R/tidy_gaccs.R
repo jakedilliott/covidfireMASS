@@ -14,11 +14,10 @@ inc_id_to_gacc <- function(inc_id, inc_info) {
 #' @param res_data A data frame with
 #' @export
 find_first_mob <- function(res_data) {
-  apply(
-    res_data,
-    1,
-    function(res) {
-      vMobs <- as.vector(res[-(1:2)], "numeric")
+  out <- apply(
+    res_data, 1,
+    function(agent) {
+      vMobs <- as.vector(agent[-(1:2)], "numeric")
       for (inc in 1:length(vMobs)) {
         if (vMobs[inc] > 0) {
           return(vMobs[inc])
@@ -26,24 +25,22 @@ find_first_mob <- function(res_data) {
       }
     }
   )
+  unlist(out)
 }
 
 #' Clean up res_gaccs == "None"
-#' @param data Daily res data frame to clean up
+#' @param inc_data data frame containing daily incident assignments
 #' @param inc_info Data frame containing information on all the incidents in a season
 #' @export
-clean_gacc <- function(data, inc_info) {
-  missing_gacc <- which(data$res_gacc == "None")
-  if (length(missing_gacc) > 0) {
-    # retrieve first inc mobilization
-    first_mobs <- find_first_mob(data[missing_gacc, ])
-    # change inc_id into inc_gacc
-    new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
-    print(new_res_gacc)
-    # assign the inc_gacc to their res_gacc
-    data$res_gacc[missing_gacc] <- new_res_gacc
-    return(data)
-  } else {
-    return(data)
-  }
+clean_gacc <- function(inc_data, inc_info) {
+  missing_gacc <- grepl("^None", inc_data$res_gacc)
+
+  # retrieve first inc mobilization
+  first_mobs <- find_first_mob(inc_data[missing_gacc, ])
+  # change inc_id into inc_gacc
+  new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
+  # assign the inc_gacc to their res_gacc
+  inc_data$res_gacc[missing_gacc] <- new_res_gacc
+
+  as.character(inc_data$res_gacc)
 }

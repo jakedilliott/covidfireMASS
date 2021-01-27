@@ -10,13 +10,13 @@
 #' @param eir Entry infection rate
 #' @param R_init Initial number of recovered agents
 #' @param R0 Basic reproduction parameter
-#' @param n_leads Number of desired leads per module
+#' @param max_leads Number of desired leads per module
 #' @param pIR Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
 #' @param I_init Parameters for setting initial infective agents
 #' @export
 seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
-                         gamma = 8, eir = 0.005, R_init = 0, R0 = 1.4, n_leads = 1,
+                         gamma = 8, eir = 0.005, R_init = 0, R0 = 1.4, max_leads = 2,
                          pIR = 0.2, pAQ = 0.3, I_init = 0) {
   # Get data in order ----
   # inc_data <- inputs$incidents
@@ -39,44 +39,40 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
   R0int <- 1
   pI <- 0.4286
 
-  BA <- ifelse(incl_A==TRUE, R0int*R0 / ( (z*pI/((pIR/DiI) + ((1-pIR)/DiAI))) + ((1-pI)/((pAQ/DiAQ) + ((1-pAQ)/DiAI))) ), 0)
-  BI <- ifelse(incl_A==TRUE, R0int*BA*z, R0/DiI)
+  BA <- ifelse(incl_A == TRUE, R0int*R0 / ( (z*pI/((pIR/DiI) + ((1-pIR)/DiAI))) + ((1-pI)/((pAQ/DiAQ) + ((1-pAQ)/DiAI))) ), 0)
+  BI <- ifelse(incl_A == TRUE, R0int*BA*z, R0/DiI)
 
-  agent_df <- data.frame(res_id = inc_data[["res_id"]],
-                        res_gacc = inc_data[["res_gacc"]],
-                        inc_id = inc_data[[3]],
-                        mod_id = mod_data[[3]],
-                        role = 0,
-                        state = 0,
-                        q_status = 0,
-                        q_days = 0)
-
-  agent_df <- clean_gacc(agent_df, inc_info)
+  agent_df <- mk_agents(inc_data, mod_data, 1)
+  agent_df$res_gacc <- clean_gacc(inc_data, inc_info)
+  agent_df$mod_id <- clean_mods(agent_df$mod_id)
+  agent_df$leader[agent_df$res_id %in% assign_roles(agent_df, max_leads)] <- TRUE
 
   if (I_init > 0) {
     agent_df$state[sample(N, I_init)] <- 2
   }
 
   outputs <- list() # create outputs list
-  # pb <- progress::progress_bar$new(
-  #   total = tend
-  # )
-  while (t < tend + 1) {
-    agent_df$mod_id <- clean_mods(agent_df$mod_id)
-    agent_df <- assign_roles(agent_df, n_leads)
+  while (t < tend) {
+    # recording outputs
+    outputs[[t]] <- dplyr::mutate(agent_df, time = t)
 
     # Mobs and Demobs
     new_df <- agent_df
-    agent_list <- unique_mod_split(agent_df)
     new_df$inc_id <- inc_data[[t + 2]]
     new_df$mod_id <- mod_data[[t + 2]]
 
+    new_df$mod_id <- clean_mods(new_df$mod_id)
+    new_df$leader[new_df$inc_id != agent_df$inc_id] <- FALSE
+    new_df$leader[new_df$res_id %in% assign_roles(new_df, max_leads)] <- TRUE
+
     # Exposure operations ----
-    exposed_res_ids <- which_exposed(agent_list, BA, BI, exp_thres, delta_t)
-    exposed_res_ids <- append(exposed_res_ids, expose_leads(agent_df, BI, BA, exp_thres, delta_t))
+    exposed_res_ids <- append(
+      expose_modules(agent_df, BA, BI, exp_thres, delta_t),
+      expose_leads(agent_df, BI, BA, exp_thres, delta_t)
+    )
     # print(exposed_res_ids)
     if (!is.null(exposed_res_ids)) {
-      new_df$state[which(new_df$res_id %in% exposed_res_ids)] <- 1
+      new_df$state[which(new_df$res_id %in% exposed_res_ids)] <- "E"
     }
 
     # state changes ----
@@ -89,49 +85,46 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
     pRecover   <- 1 - exp(-1/gamma * delta_t) # p of recovery
     pInfective <- 1 - exp(-1/De * delta_t) # p of becoming infective
 
-# Agents that have changed incidents can be infected during mobilization
-new_df$state[which(agent_df$inc_id != new_df$inc_id &
-                     agent_df$state == 0 &
-                     rE < eir)] <- 1
+    # Agents that have changed incidents can be infected during mobilization
+    new_df$state[which(agent_df$inc_id != new_df$inc_id &
+                         agent_df$state == "S" &
+                         rE < eir)] <- "E"
 
-# After incubation period Exposed move to Infected or Asymptomatic
-new_df$state[which(agent_df$state == 1 & rI < pInfective & rS < pI)] <- 2
-new_df$state[which(agent_df$state == 1 & rI < pInfective & rS > pI)] <- 4
+    # After incubation period Exposed move to Infected or Asymptomatic
+    new_df$state[which(agent_df$state == "E" & rI < pInfective & rS < pI)] <- "I"
+    new_df$state[which(agent_df$state == "E" & rI < pInfective & rS > pI)] <- "A"
 
-# Infected(Symptomatic) recognize symptoms and quarantine or don't catch
-# symptoms and recover
-new_df$state[which(agent_df$state == 2 & rR < pRecover)] <- 3
-new_df$q_status[which(agent_df$state == 2 & rQ < 1-pIR)] <- 1
+    # Infected(Symptomatic) recognize symptoms and quarantine or don't catch
+    # symptoms and recover
+    new_df$state[which(agent_df$state == "I" & rR < pRecover)] <- "R"
+    new_df$quarantine[which(agent_df$state == "I" & rQ < 1-pIR)] <- TRUE
 
-# Asymptomatic are caught by testing/screening and quarantine or they are
-# not caught and recover
-new_df$state[which(agent_df$state == 4 & rR < pRecover)] <- 3
-new_df$q_status[which(agent_df$state == 4 & rQ < pAQ)] <- 1
+    # Asymptomatic are caught by testing/screening and quarantine or they are
+    # not caught and recover
+    new_df$state[which(agent_df$state == "A" & rR < pRecover)] <- "R"
+    new_df$quarantine[which(agent_df$state == "A" & rQ < pAQ)] <- TRUE
 
-# module quarantine
-res_ids_to_q <- modular_quarantine(agent_list, pIR, pAQ)
-if (!is.null(res_ids_to_q)) {
-  new_df$q_status[which(new_df$res_id %in% res_ids_to_q)] <- 1
-}
+    # module quarantine
+    res_ids_to_q <- modular_quarantine(agent_df, pIR, pAQ)
+    if (!is.null(res_ids_to_q) & length(res_ids_to_q) > 0) {
+      new_df$quarantine[which(agent_df$res_id %in% res_ids_to_q)] <- TRUE
+    }
 
-# Quarantine operations
-new_df$days_q[which(agent_df$q_status == 1)] %+=% 1 # increment q_days
+    # Quarantine operations
+    new_df$days_q[which(agent_df$quarantine)] %+=% 1 # increment q_days
 
-# Agents leave isolation only if they have been isolated a minimum of days
-# and they are Susceptible or Recovered
-new_df$q_days[which(agent_df$state %in% c(0, 3) &
-                      agent_df$q_status > 1 &
-                      agent_df$q_days >= Dq)] <- 0
-new_df$q_status[which(agent_df$state %in% c(0, 3) &
-                        agent_df$q_status > 1 &
-                        agent_df$q_days >= Dq)] <- 0
+    # Agents leave isolation only if they have been isolated a minimum of days
+    # and they are Susceptible or Recovered
+    new_df$q_days[which(agent_df$state %in% c("S", "R") &
+                          agent_df$quarantine &
+                          agent_df$q_days >= Dq)] <- 0
+    new_df$quarantine[which(agent_df$state %in% c("S", "R") &
+                              agent_df$quarantine &
+                              agent_df$q_days >= Dq)] <- FALSE
 
-    # recording outputs
-    outputs[[t]] <- dplyr::mutate(agent_df, time = t)
     # clean up
     agent_df <- new_df
     t <- t + delta_t
-    # pb$tick()
   }
 
   dplyr::bind_rows(outputs)

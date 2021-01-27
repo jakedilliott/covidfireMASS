@@ -1,22 +1,23 @@
 #' Module based quarantine operations
 #' @param input_list list of data frames split by fire module
 #' @export
-modular_quarantine <- function(input_list, pIR, pAQ) {
+modular_quarantine <- function(input_df, pIR, pAQ) {
+  splitby_mod <- split(input_df, paste0(input_df$inc_id, "_", input_df$mod_id))
+
   out <- lapply(
-    input_list,
-    function(module) {
-      rQ <- runif(nrow(module))
-
-      nQ <- length(which((module$state == 2 && rQ < 1-pIR) || (module$state == 4 && rQ < pAQ)))
-
-      if ((nQ) > 0) {
-        if ("O-100" %in% module$mod_id) {
-          module$res_id[which((module$state == 2 && rQ < 1-pIR) || (module$state == 4 && rQ < pAQ))]
+    splitby_mod,
+    function(mod_df) {
+      rQ <- runif(nrow(mod_df))
+      caught <- which((mod_df$state == "I" & rQ < 1-pIR) |
+                        (mod_df$state == "A" & rQ < pAQ))
+      if (length(caught) > 0) {
+        if (0 %in% mod_df$inc_id | "O-100" %in% mod_df$mod_id) {
+          mod_df$res_id[caught]
         } else {
-          module$res_id
+          mod_df$res_id
         }
       }
     }
   )
-  as.vector(unlist(out))
+  as.numeric(unlist(out))
 }
