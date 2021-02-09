@@ -28,12 +28,21 @@ plot_quarantined <- function(data, ...) {
    ggplot2::labs(...)
 }
 
-plot_by_gacc <- function(data, ...) {
-  filter_inf <- dplyr::filter(data, state > 0)
-  to_plot <- dplyr::count(filter_inf, time, res_gacc, name = "count")
+plot_cum_inf <- function(sim_data, ...) {
+  to_plot <- dplyr::filter(sim_data, state != "S")
+  to_plot <- dplyr::count(to_plot, time, res_gacc)
 
-  ggplot2::ggplot(to_plot, ggplot2::aes(time, count)) +
+  ggplot2::ggplot(to_plot, ggplot2::aes(time, n)) +
     ggplot2::geom_col(ggplot2::aes(fill = res_gacc), position = "stack") +
     ggplot2::theme_bw(base_size = 14) +
     ggplot2::labs(...)
+}
+
+plot_infective <- function(sim_data) {
+  to_plot <- dplyr::filter(sim_data, state %in% c("I", "A"))
+  to_plot <- dplyr::count(to_plot, time, res_gacc)
+
+  ggplot2::ggplot(to_plot, ggplot2::aes(time, n, fill = factor(res_gacc))) +
+    ggplot2::geom_area(position = "stack") +
+    ggplot2::theme_bw(base_size = 14)
 }

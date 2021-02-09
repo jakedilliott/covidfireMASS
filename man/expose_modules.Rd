@@ -2,23 +2,24 @@
 % Please edit documentation in R/exposure_fxns.R
 \name{expose_modules}
 \alias{expose_modules}
-\title{Exposes agents based on assigned modules}
+\title{Find exposed agents by unique module (inc_id x mod_id)}
 \usage{
-expose_modules(inc_df, new_df, BA, BI, exp_thres, delta_t)
+expose_modules(input_df, BA, BI, exp_thres = 0, delta_t = 1)
 }
 \arguments{
-\item{inc_df}{Single incident data frame. The template for calculating the new data frame.}
+\item{input_df}{Input data frame}
 
-\item{new_df}{The data frame to be modified}
+\item{BA}{Beta for Asymptomatic}
 
-\item{BA}{Beta A}
+\item{BI}{Beta for Symptomatic}
 
-\item{BI}{Beta I}
-
-\item{exp_thres}{How many exposures before infection, default is 1.}
+\item{exp_thres}{Exposure threshold}
 
 \item{delta_t}{Time step}
 }
+\value{
+Vector of resource ID's that have been newly exposed
+}
 \description{
-Exposes agents based on assigned modules
+Find exposed agents by unique module (inc_id x mod_id)
 }

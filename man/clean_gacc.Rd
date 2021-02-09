@@ -4,12 +4,12 @@
 \alias{clean_gacc}
 \title{Clean up res_gaccs == "None"}
 \usage{
-clean_gacc(data, inc_info)
+clean_gacc(inc_data, inc_info)
 }
 \arguments{
-\item{data}{Daily res data frame to clean up}
+\item{inc_data}{data frame containing daily incident assignments}
 
-\item{inc_info}{Data frame containing information on all he incidents in a season}
+\item{inc_info}{Data frame containing information on all the incidents in a season}
 }
 \description{
 Clean up res_gaccs == "None"

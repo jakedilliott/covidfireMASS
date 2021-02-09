@@ -8,6 +8,7 @@
 #' @param De Incubation period
 #' @param gamma Recovery time in days
 #' @param eir Entry infection rate
+#' @param custom_eir Named list of customized GACC infection rates
 #' @param R_init Initial number of recovered agents
 #' @param R0 Basic reproduction parameter
 #' @param max_leads Number of desired leads per module
@@ -16,7 +17,8 @@
 #' @param I_init Parameters for setting initial infective agents
 #' @export
 seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
-                         gamma = 8, eir = 0.005, R_init = 0, R0 = 1.4, max_leads = 2,
+                         gamma = 8, eir = 0.005, custom_eir = "none", R_init = 0,
+                         vax_rate = 0.01, custom_vax = "none", R0 = 1.4, max_leads = 2,
                          pIR = 0.2, pAQ = 0.3, I_init = 0) {
   # Get data in order ----
   # inc_data <- inputs$incidents
@@ -42,19 +44,28 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
   BA <- ifelse(incl_A == TRUE, R0int*R0 / ( (z*pI/((pIR/DiI) + ((1-pIR)/DiAI))) + ((1-pI)/((pAQ/DiAQ) + ((1-pAQ)/DiAI))) ), 0)
   BI <- ifelse(incl_A == TRUE, R0int*BA*z, R0/DiI)
 
+  # Setting up the agent dataframe
   agent_df <- mk_agents(inc_data, mod_data, 1)
   agent_df$res_gacc <- clean_gacc(inc_data, inc_info)
   agent_df$mod_id <- clean_mods(agent_df$mod_id)
   agent_df$leader[agent_df$res_id %in% assign_roles(agent_df, max_leads)] <- TRUE
+  agent_df$vaccinated <- FALSE
 
   if (I_init > 0) {
     agent_df$state[sample(N, I_init)] <- 2
   }
 
+  if (custom_eir != "none") {
+    agent_df$gacc_eir <- update_eir(agent_df, custom_eir, eir)
+  } else {
+    agent_df$gacc_eir <- eir
+  }
+
   outputs <- list() # create outputs list
   while (t < tend) {
     # recording outputs
-    outputs[[t]] <- dplyr::mutate(agent_df, time = t)
+    agent_df$time <- t
+    outputs[[t]] <- agent_df
 
     # Mobs and Demobs
     new_df <- agent_df
@@ -66,9 +77,10 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
     new_df$leader[new_df$res_id %in% assign_roles(new_df, max_leads)] <- TRUE
 
     # Exposure operations ----
-    exposed_res_ids <- append(
+    exposed_res_ids <- c(
       expose_modules(agent_df, BA, BI, exp_thres, delta_t),
-      expose_leads(agent_df, BI, BA, exp_thres, delta_t)
+      expose_leads(agent_df, BI, BA, exp_thres, delta_t),
+      expose_off_fire(agent_df)
     )
     # print(exposed_res_ids)
     if (!is.null(exposed_res_ids)) {
@@ -82,13 +94,10 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
     rS <- stats::runif(N) # draw to become symptomatic
     rQ <- stats::runif(N) # getting caught and moving to quarantine
     rR <- stats::runif(N) # draw to recover
+    rVax <- stats::runif(N)
+
     pRecover   <- 1 - exp(-1/gamma * delta_t) # p of recovery
     pInfective <- 1 - exp(-1/De * delta_t) # p of becoming infective
-
-    # Agents that have changed incidents can be infected during mobilization
-    new_df$state[which(agent_df$inc_id != new_df$inc_id &
-                         agent_df$state == "S" &
-                         rE < eir)] <- "E"
 
     # After incubation period Exposed move to Infected or Asymptomatic
     new_df$state[which(agent_df$state == "E" & rI < pInfective & rS < pI)] <- "I"
@@ -115,12 +124,22 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
 
     # Agents leave isolation only if they have been isolated a minimum of days
     # and they are Susceptible or Recovered
-    new_df$q_days[which(agent_df$state %in% c("S", "R") &
-                          agent_df$quarantine &
-                          agent_df$q_days >= Dq)] <- 0
-    new_df$quarantine[which(agent_df$state %in% c("S", "R") &
-                              agent_df$quarantine &
-                              agent_df$q_days >= Dq)] <- FALSE
+    leaving_quarantine <- agent_df$res_id[agent_df$state %in% c("S", "R") &
+                                            agent_df$quarantine &
+                                            agent_df$q_days >= Dq]
+    new_df$q_days[new_df$res_id %in% leaving_quarantine] <- 0
+    new_df$quarantine[new_df$res_id %in% leaving_quarantine] <- FALSE
+
+    # Vaccination
+    vax_candidates <- agent_df$res_id[!agent_df$quarantine & !agent_df$vaccinated]
+    to_vaccinate <-
+      if (length(vax_candidates) > vax_rate * N) {
+        sample(vax_candidates, vax_rate * N)
+      } else {
+        agent_df$res_id[!agent_df$vaccinated]
+      }
+    new_df$vaccinated[new_df$res_id %in% to_vaccinate] <- TRUE
+    new_df$state[new_df$res_id %in% to_vaccinate] <- "R"
 
     # clean up
     agent_df <- new_df

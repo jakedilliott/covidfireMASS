@@ -8,9 +8,11 @@ modular_quarantine <- function(input_df, pIR, pAQ) {
     splitby_mod,
     function(mod_df) {
       rQ <- runif(nrow(mod_df))
-      caught <- which((mod_df$state == "I" & rQ < 1-pIR) |
-                        (mod_df$state == "A" & rQ < pAQ))
-      if (length(caught) > 0) {
+      caught <- c(
+        mod_df$res_id[mod_df$state == "I" & rQ < 1-pIR],
+        mod_df$res_id[mod_df$state == "A" & rQ < pAQ]
+      )
+      if (length(caught) > 0L) {
         if (0 %in% mod_df$inc_id | "O-100" %in% mod_df$mod_id) {
           mod_df$res_id[caught]
         } else {

@@ -4,12 +4,10 @@
 \alias{modular_quarantine}
 \title{Module based quarantine operations}
 \usage{
-modular_quarantine(inc_df, new_df)
+modular_quarantine(input_df, pIR, pAQ)
 }
 \arguments{
-\item{inc_df}{data frame containing the data for a single incident}
-
-\item{new_df}{data frame to be modified}
+\item{input_list}{list of data frames split by fire module}
 }
 \description{
 Module based quarantine operations

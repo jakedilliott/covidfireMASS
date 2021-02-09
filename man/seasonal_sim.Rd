@@ -10,13 +10,15 @@ seasonal_sim(
   inc_info,
   incl_A = TRUE,
   De = 5,
-  gamma = 10,
+  gamma = 8,
   eir = 0.005,
+  custom_eir = "none",
   R_init = 0,
   R0 = 1.4,
+  max_leads = 2,
   pIR = 0.2,
   pAQ = 0.3,
-  I_init = NULL
+  I_init = 0
 )
 }
 \arguments{
@@ -34,9 +36,13 @@ seasonal_sim(
 
 \item{eir}{Entry infection rate}
 
+\item{custom_eir}{Named list of customized GACC infection rates}
+
 \item{R_init}{Initial number of recovered agents}
 
 \item{R0}{Basic reproduction parameter}
+
+\item{max_leads}{Number of desired leads per module}
 
 \item{pIR}{Probability that Symptomatic agents do not quarantine}
 

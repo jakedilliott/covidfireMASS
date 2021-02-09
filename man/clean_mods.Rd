@@ -4,7 +4,7 @@
 \alias{clean_mods}
 \title{Group overhead modules into 1 module}
 \usage{
-clean_mods(agent_df)
+clean_mods(mod_id_list)
 }
 \arguments{
 \item{agent_df}{data frame containing firefighter agents data}

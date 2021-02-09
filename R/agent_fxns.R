@@ -34,7 +34,7 @@ assign_roles <- function(input_df, max_leads) {
       if (mod_df$inc_id[1] == 0) {
         mod_df$leader <- FALSE
       } else {
-        total <- nrow(input_df)
+        total <- nrow(mod_df)
         num_leads <- length(which(mod_df$leader))
 
         if (total <= max_leads) { # agents in module <= max leads

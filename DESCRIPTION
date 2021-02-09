@@ -5,8 +5,7 @@ Authors@R:
     person(given = "Jake",
            family = "Dilliott",
            role = c("aut", "cre"),
-           email = "jdilliott@protonmail.com",
-           comment = c(ORCID = "0000-0002-1069-4005"))
+           email = "jdilliott@protonmail.com")
 Description: This agent-based model implements module based infection dynamics
     based on the hub-and-spoke camp protocol. 
 License: MIT + file LICENSE
@@ -17,7 +16,8 @@ RoxygenNote: 7.1.1
 Imports:
     stats,
     dplyr,
-    purrr
+    purrr,
+    ggplot2
 Suggests: 
     testthat (>= 3.0.0),
     furrr

@@ -2,23 +2,24 @@
 % Please edit documentation in R/exposure_fxns.R
 \name{expose_leads}
 \alias{expose_leads}
-\title{Exposes agents based on assigned roles}
+\title{Find exposed leaders by unique fire (inc_id)}
 \usage{
-expose_leads(inc_df, new_df, BI, BA, exp_thres, delta_t)
+expose_leads(input_df, BI, BA, exp_thres = 0, delta_t = 1)
 }
 \arguments{
-\item{inc_df}{Single incident data frame. The template for calculating the new data frame.}
+\item{input_df}{Input data frame}
 
-\item{new_df}{The data frame to be modified}
+\item{BI}{Beta for Symptomatic}
 
-\item{BI}{Beta I}
+\item{BA}{Beta for Asymptomatic}
 
-\item{BA}{Beta A}
-
-\item{exp_thres}{How many exposures before infection, default is 1.}
+\item{exp_thres}{Exposure threshold}
 
 \item{delta_t}{Time step}
 }
+\value{
+Vector of resource ID's that have been newly exposed
+}
 \description{
-Exposes agents based on assigned roles
+Find exposed leaders by unique fire (inc_id)
 }
