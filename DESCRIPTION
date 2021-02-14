@@ -16,8 +16,7 @@ RoxygenNote: 7.1.1
 Imports:
     stats,
     dplyr,
-    purrr,
-    ggplot2
+    purrr
 Suggests: 
     testthat (>= 3.0.0),
     furrr

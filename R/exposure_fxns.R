@@ -71,29 +71,15 @@ expose_leads <- function(input_df, BI, BA, exp_thres = 0, delta_t = 1) {
 }
 
 # Off Fire Functions =====
-
-#' Update the default EIR list
-#' @param eir_ls named list containing infection rates (list(gacc = rate))
-#' @param custom_rates Named list containing new infection rates to be applied
-update_eir <- function(input_df, custom_rates, eir) {
-  sapply(input_df$res_gacc, function(x) {
-    if(x %in% names(custom_rates)) {
-      custom_rates[[x]]
-    }
-    else {
-      eir
-    }
-  })
-}
-
 #' Find exposed agents that are off fire
 #' @param input_df complete agent data frame (all incidents and modules)
-expose_off_fire <- function(input_df) {
+#' @param eir entry infection rate, or off fire exposure rate
+expose_off_fire <- function(input_df, eir) {
   off_fire <- input_df[input_df$inc_id == 0, ]
-  rE <- runif(nrow(off_fire))
+  rE <- stats::runif(nrow(off_fire))
 
   off_fire$res_id[off_fire$state == "S" &
                     !off_fire$quarantine &
-                    rE < off_fire$gacc_eir]
+                    rE < eir]
 }
 

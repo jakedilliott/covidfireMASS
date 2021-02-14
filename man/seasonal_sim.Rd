@@ -14,11 +14,15 @@ seasonal_sim(
   eir = 0.005,
   custom_eir = "none",
   R_init = 0,
+  I_init = 0,
+  vax_init = 0,
+  vax_rate = 0.01,
+  varying_vax = NULL,
+  vax_efficacy = 0.95,
   R0 = 1.4,
   max_leads = 2,
   pIR = 0.2,
-  pAQ = 0.3,
-  I_init = 0
+  pAQ = 0.3
 )
 }
 \arguments{
@@ -40,6 +44,16 @@ seasonal_sim(
 
 \item{R_init}{Initial number of recovered agents}
 
+\item{I_init}{Initial number of infectious agents}
+
+\item{vax_init}{Initial number of vaccinated agents}
+
+\item{vax_rate}{Percent of total population to vaccinate at each time step}
+
+\item{varying_vax}{Named list specifying a gacc and its new vax rate, for example list(gacc = "NM-SWC", rate = 0.2)}
+
+\item{vax_efficacy}{Proportion of vaccinated agents that become immune}
+
 \item{R0}{Basic reproduction parameter}
 
 \item{max_leads}{Number of desired leads per module}
@@ -47,8 +61,6 @@ seasonal_sim(
 \item{pIR}{Probability that Symptomatic agents do not quarantine}
 
 \item{pAQ}{Probability that Asymptomatic will be caught and quarantined}
-
-\item{I_init}{Parameters for setting initial infective agents}
 }
 \description{
 Seasonal agent-based model simulation

@@ -4,10 +4,12 @@
 \alias{expose_off_fire}
 \title{Find exposed agents that are off fire}
 \usage{
-expose_off_fire(input_df)
+expose_off_fire(input_df, eir)
 }
 \arguments{
 \item{input_df}{complete agent data frame (all incidents and modules)}
+
+\item{eir}{entry infection rate, or off fire exposure rate}
 }
 \description{
 Find exposed agents that are off fire

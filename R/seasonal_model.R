@@ -10,21 +10,36 @@
 #' @param eir Entry infection rate
 #' @param custom_eir Named list of customized GACC infection rates
 #' @param R_init Initial number of recovered agents
+#' @param I_init Initial number of infectious agents
+#' @param vax_init Initial number of vaccinated agents
+#' @param vax_rate Percent of total population to vaccinate at each time step
+#' @param varying_vax Named list specifying a gacc and its new vax rate, for example list(gacc = "NM-SWC", rate = 0.2)
+#' @param vax_efficacy Proportion of vaccinated agents that become immune
 #' @param R0 Basic reproduction parameter
 #' @param max_leads Number of desired leads per module
 #' @param pIR Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
-#' @param I_init Parameters for setting initial infective agents
 #' @export
-seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
-                         gamma = 8, eir = 0.005, custom_eir = "none", R_init = 0,
-                         vax_rate = 0.01, custom_vax = "none", R0 = 1.4, max_leads = 2,
-                         pIR = 0.2, pAQ = 0.3, I_init = 0) {
-  # Get data in order ----
-  # inc_data <- inputs$incidents
-  # mod_data <- inputs$modules
+seasonal_sim <- function(inc_data,
+                         mod_data,
+                         inc_info,
+                         incl_A = TRUE,
+                         De = 5,
+                         gamma = 8,
+                         eir = 0.005,
+                         custom_eir = "none",
+                         R_init = 0,
+                         I_init = 0,
+                         vax_init = 0,
+                         vax_rate = 0.01,
+                         varying_vax = NULL,
+                         vax_efficacy = 0.95,
+                         R0 = 1.4,
+                         max_leads = 2,
+                         pIR = 0.2,
+                         pAQ = 0.3) {
 
-  set.seed(123)
+  # set.seed(123)
 
   # Parameters ----
   N <- nrow(inc_data)
@@ -50,15 +65,19 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
   agent_df$mod_id <- clean_mods(agent_df$mod_id)
   agent_df$leader[agent_df$res_id %in% assign_roles(agent_df, max_leads)] <- TRUE
   agent_df$vaccinated <- FALSE
-
-  if (I_init > 0) {
-    agent_df$state[sample(N, I_init)] <- 2
+  agent_df$vax_rate <- vax_rate
+  if (!is.null(varying_vax)){
+    agent_df$vax_rate[agent_df$res_gacc %in% varying_vax$gacc] <- varying_vax$rate
   }
 
-  if (custom_eir != "none") {
-    agent_df$gacc_eir <- update_eir(agent_df, custom_eir, eir)
-  } else {
-    agent_df$gacc_eir <- eir
+  if (I_init > 0) agent_df$state[sample(N, I_init)] <- "I"
+
+  if (R_init > 0) agent_df$state[sample(which(agent_df$state == "S"), R_init)] <- "R"
+
+  if (vax_init > 0) {
+    to_vax <- sample(which(agent_df$state == "S"), vax_init)
+    agent_df$state[to_vax] <- "R"
+    agent_df$vaccinated[to_vax] <- TRUE
   }
 
   outputs <- list() # create outputs list
@@ -80,7 +99,7 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
     exposed_res_ids <- c(
       expose_modules(agent_df, BA, BI, exp_thres, delta_t),
       expose_leads(agent_df, BI, BA, exp_thres, delta_t),
-      expose_off_fire(agent_df)
+      expose_off_fire(agent_df, eir)
     )
     # print(exposed_res_ids)
     if (!is.null(exposed_res_ids)) {
@@ -131,15 +150,9 @@ seasonal_sim <- function(inc_data, mod_data, inc_info, incl_A = TRUE, De = 5,
     new_df$quarantine[new_df$res_id %in% leaving_quarantine] <- FALSE
 
     # Vaccination
-    vax_candidates <- agent_df$res_id[!agent_df$quarantine & !agent_df$vaccinated]
-    to_vaccinate <-
-      if (length(vax_candidates) > vax_rate * N) {
-        sample(vax_candidates, vax_rate * N)
-      } else {
-        agent_df$res_id[!agent_df$vaccinated]
-      }
-    new_df$vaccinated[new_df$res_id %in% to_vaccinate] <- TRUE
-    new_df$state[new_df$res_id %in% to_vaccinate] <- "R"
+    vaccinated_agents <- vaccinate(agent_df, vax_efficacy)
+    new_df$vaccinated[new_df$res_id %in% vaccinated_agents$vaccinated] <- TRUE
+    new_df$state [new_df$res_id %in% vaccinated_agents$immune] <- "R"
 
     # clean up
     agent_df <- new_df

@@ -4,11 +4,11 @@
 \alias{clean_mods}
 \title{Group overhead modules into 1 module}
 \usage{
-clean_mods(mod_id_list)
+clean_mods(mod_ids)
 }
 \arguments{
-\item{agent_df}{data frame containing firefighter agents data}
+\item{mod_ids}{character vector of mod_ids}
 }
 \description{
-Group overhead modules into 1 module
+Solves the problem where incidents had too many unique over head modules.
 }
