@@ -30,3 +30,85 @@ You can install the development version of covidfireMASS from
 ``` r
 devtools::install_github("jakedilliott/covidfireMASS")
 ```
+
+## Necessary Data
+
+### Incident Assignments
+
+-   Each row is a unique fire fighter/resource
+-   res\_id: numeric, resource ID number
+-   res\_gacc: character, resource home GACC (Geographic Area
+    Coordination Center)
+-   Each column to the right of the second column is labeled with a date
+    and each cell contains an incident that shows which fire each
+    resource was assigned to on that day.
+
+Example: Resource 001 was on fire 1046 from 01/01/2020 - 01/01/2020
+
+| res\_id | res\_gacc | X2020.01.01 | X2020.01.02 | X2020.01.03 | …   |
+|--------:|:----------|------------:|------------:|------------:|:----|
+|    1001 | NM-SWC    |        1046 |        1046 |        1046 | …   |
+|    1002 | OR-NWC    |        1055 |        1055 |           0 | …   |
+|    1003 | OR-NWC    |           0 |           0 |        1055 | …   |
+
+Incident Assignments Table
+
+### Module Assignments
+
+-   res\_id and res\_gacc columns here are the same as the module
+    assignments data
+-   Each column to the right of the second column is labeled with a date
+    and each cell contains a module ID that describes which module (team
+    or crew) each resource was assigned to each day. These module ID’s
+    are only unique when paired with the incident of each agent on that
+    day, there are modules with the same ID across multiple fires.
+
+| res\_id | res\_gacc | X2020.01.01 | X2020.01.02 | X2020.01.03 | …   |
+|--------:|:----------|:------------|:------------|:------------|:----|
+|    1001 | NM-SWC    | E-1         | E-1         | E-1         | …   |
+|    1002 | OR-NWC    | O-12        | O-12        | 0           | …   |
+|    1003 | OR-NWC    | 0           | 0           | C-8         | …   |
+
+Module Assignments Table
+
+### Incident Information
+
+inc\_id \| inc\_number \| inc\_name \| inc\_gacc \| inc\_lat \| inc\_lon
+\| max\_team\_type \| first\_day \| last\_day \|
+
+## Minimal Example
+
+``` r
+library(covidfireMASS)
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Load necessary data
+inc_assignments <- read_csv("path/to/inc_assignments.csv")
+mod_assignments <- read_csv("path/to/mod_assignments.csv")
+inc_info <- read.csv("path/to/inc_info.csv")
+
+# Default simulation run, see ?seasonal_sim for default inputs
+sim1 <- seasonal_sim(inc_assignments, mod_assignments, inc_info)
+
+# Reducing vaccination rate for the Southwest GACC and specifying an initial vaccinated population.
+sim2 <- seasonal_sim(inc_assignments, mod_assignments, inc_info,
+                     varying_vax = list(gacc = "NM-SWC", rate = 0.005),
+                     R_init = 5000)
+                     
+sapply(sim2, class)
+# res_id    res_gacc      inc_id      mod_id      leader       state  quarantine      q_days  vaccinated 
+#   "numeric" "character"   "numeric" "character"   "logical" "character"   "logical"   "numeric"   "logical" 
+#   vax_rate        time 
+#  "numeric"   "numeric"
+
+# Graphing quarantined work force
+
+to_plot <- sim2 %>%
+  filter(inc_id > 0, quarantined) %>%
+  count(time, res_gacc)
+  
+p <- ggplot(to_plot, aes(time, n, color = res_gacc)) +
+  geom_col(position = "stack")
+```
