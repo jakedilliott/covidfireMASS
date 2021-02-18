@@ -13,7 +13,7 @@ public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostat
 version](https://img.shields.io/badge/R%3E%3D-%602.10%60-6666ff.svg)](https://cran.r-project.org/)
 <!-- badges: end -->
 
-## Covid Fire Multi Agent Seasona Simulation
+## Covid Fire Multi Agent Seasonal Simulation
 
 An Agent-Based Model that simulates COVID dynamics within wildfire
 firefighter camps. This model assumes a hub-and-spoke camp model, which
@@ -41,9 +41,10 @@ devtools::install_github("jakedilliott/covidfireMASS")
     Coordination Center)
 -   Each column to the right of the second column is labeled with a date
     and each cell contains an incident that shows which fire each
-    resource was assigned to on that day.
+    resource was assigned to on that day. On days where a resource was
+    not on a fire inc\_id needs to be 0.
 
-Example: Resource 001 was on fire 1046 from 01/01/2020 - 01/01/2020
+Example: Resource 1001 was on incident 1046 from 01/01/2020 - 01/01/2020
 
 | res\_id | res\_gacc | X2020.01.01 | X2020.01.02 | X2020.01.03 | …   |
 |--------:|:----------|------------:|------------:|------------:|:----|
@@ -59,9 +60,12 @@ Incident Assignments Table
     assignments data
 -   Each column to the right of the second column is labeled with a date
     and each cell contains a module ID that describes which module (team
-    or crew) each resource was assigned to each day. These module ID’s
+    or crew) each resource was assigned to each day. On days where a
+    resource is not on a fire mod\_id needs to be 0. These module ID’s
     are only unique when paired with the incident of each agent on that
     day, there are modules with the same ID across multiple fires.
+
+Example: Resource 1001 was on module E-1 from 01/01/2020 - 01/03/2020
 
 | res\_id | res\_gacc | X2020.01.01 | X2020.01.02 | X2020.01.03 | …   |
 |--------:|:----------|:------------|:------------|:------------|:----|
@@ -84,31 +88,40 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 
-# Load necessary data
+#### Import Data ####
 inc_assignments <- read_csv("path/to/inc_assignments.csv")
 mod_assignments <- read_csv("path/to/mod_assignments.csv")
 inc_info <- read.csv("path/to/inc_info.csv")
 
+#### Running Simulations ####
 # Default simulation run, see ?seasonal_sim for default inputs
 sim1 <- seasonal_sim(inc_assignments, mod_assignments, inc_info)
 
-# Reducing vaccination rate for the Southwest GACC and specifying an initial vaccinated population.
+# Reducing vaccination rate for the Southwest GACC
+# and specifying an initial vaccinated population.
 sim2 <- seasonal_sim(inc_assignments, mod_assignments, inc_info,
                      varying_vax = list(gacc = "NM-SWC", rate = 0.005),
                      R_init = 5000)
                      
 sapply(sim2, class)
-# res_id    res_gacc      inc_id      mod_id      leader       state  quarantine      q_days  vaccinated 
-#   "numeric" "character"   "numeric" "character"   "logical" "character"   "logical"   "numeric"   "logical" 
-#   vax_rate        time 
-#  "numeric"   "numeric"
 
-# Graphing quarantined work force
+# Seasonal sim outputs a data frame with the following columns
+# res_id     res_gacc     inc_id     mod_id        leader    state
+# "numeric"  "character"  "numeric"  "character"  "logical"  "character"
+#
+# quarantine  q_days     vaccinated  vax_rate   time 
+# "logical"   "numeric"  "logical"   "numeric"  "numeric"
+
+#### Visualization ####
+# Graphing quarantined work force (i.e. all agents that are on an incident
+# and in quarantine/isolation)
 
 to_plot <- sim2 %>%
   filter(inc_id > 0, quarantined) %>%
   count(time, res_gacc)
   
-p <- ggplot(to_plot, aes(time, n, color = res_gacc)) +
+p <- ggplot(to_plot, aes(time, n, fill = res_gacc)) +
   geom_col(position = "stack")
 ```
+
+NOTE: ***include example figure with the graph here***

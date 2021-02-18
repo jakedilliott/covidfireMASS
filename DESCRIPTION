@@ -1,11 +1,25 @@
 Package: covidfireMASS
-Title: Agent-Based Model For COVID-19 Dynamics In A Wildfire Season
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Jake",
-           family = "Dilliott",
-           role = c("aut", "cre"),
-           email = "jdilliott@protonmail.com")
+Type: Package
+Title: Agent-Based Model For COVID-19 Dynamics In A Wildfire Season
+Date: 2021-02-18
+Authors@R:
+    c(person(given = "Jake",
+             family = "Dilliott",
+             role = c("aut", "cre"),
+             email = "jdilliott@protonmail.com"),
+      person(given = "Erin",
+             family = "Belval",
+             role = c("aut"),
+             email = "erin.belval@colostate.edu"),
+      person(given = "Jude",
+             family = "Bayham",
+             role = c("aut"),
+             email = "jude.bayham@colostate.edu"),
+      person(given = "Andrea",
+             family = "Buchwald",
+             role = c("aut"),
+             email = "andrea.buchwald@cuanschutz.edu"))
 Description: This agent-based model implements module based infection dynamics
     based on the hub-and-spoke camp protocol. 
 License: MIT + file LICENSE
@@ -20,7 +34,8 @@ Imports:
 Suggests: 
     testthat (>= 3.0.0),
     furrr,
-    ggplot2
+    ggplot2,
+    readr
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
