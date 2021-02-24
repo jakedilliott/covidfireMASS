@@ -21,6 +21,7 @@ seasonal_sim(
   vax_efficacy = 0.95,
   R0 = 1.4,
   max_leads = 2,
+  prop_overhead_leads = 0.5,
   pIR = 0.2,
   pAQ = 0.3
 )

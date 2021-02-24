@@ -10,5 +10,9 @@ clean_mods(mod_ids)
 \item{mod_ids}{character vector of mod_ids}
 }
 \description{
-Solves the problem where incidents had too many unique over head modules.
+Group overhead modules into 1 module
+}
+\details{
+Solves the problem where incidents had too many unique overhead
+modules by changing the all overhead modules to "O-100".
 }

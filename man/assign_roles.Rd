@@ -4,12 +4,14 @@
 \alias{assign_roles}
 \title{Assign roles to agents}
 \usage{
-assign_roles(input_df, max_leads)
+assign_roles(input_df, module_leads, prop_overhead_leads)
 }
 \arguments{
 \item{input_df}{data frame containing agent data}
 
-\item{max_leads}{number of leads per module}
+\item{module_leads}{number of leads per module}
+
+\item{overhead_leads}{number of leads per overhead module}
 }
 \description{
 Assign roles to agents
