@@ -4,10 +4,13 @@
 \alias{clean_mods}
 \title{Group overhead modules into 1 module}
 \usage{
-clean_mods(mod_ids)
+clean_mods(mod_id_df)
 }
 \arguments{
-\item{mod_ids}{character vector of mod_ids}
+\item{mod_id_df}{module id assignment data frame}
+}
+\value{
+all overhead assignments are changed to "O-100"
 }
 \description{
 Group overhead modules into 1 module

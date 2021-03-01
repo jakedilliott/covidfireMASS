@@ -3,12 +3,18 @@
 #' @details Solves the problem where incidents had too many unique overhead
 #' modules by changing the all overhead modules to "O-100".
 #'
-#' @param mod_ids character vector of mod_ids
-clean_mods <- function(mod_ids) {
-  overhead <- grepl("^O-\\d", as.vector(mod_ids))
-  mod_ids[overhead] <- "O-100"
-
-  as.character(mod_ids)
+#' @param mod_id_df module id assignment data frame
+#' @returns all overhead assignments are changed to "O-100"
+#' @export
+clean_mods <- function(mod_id_df) {
+  purrr::map_dfc(
+    mod_id_df,
+    function(x) {
+      overheads <- grepl("^O-", x)
+      x[overheads] <- "O-100"
+      x
+    }
+  )
 }
 
 #' Assign roles to agents
@@ -55,6 +61,7 @@ assign_roles <- function(input_df, max_leads, prop_overhead_leads) {
   )
   return(as.numeric(unlist(out))) # final
 }
+
 #' Find out which agents to vaccinate and assign immunity
 #' @param input_df data frame containing agent roster
 #' @param vax_efficacy proportion of vaccinated agents the gain immunity

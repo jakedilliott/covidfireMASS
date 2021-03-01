@@ -15,8 +15,10 @@
 #' @param vax_rate Percent of total population to vaccinate at each time step
 #' @param varying_vax Named list specifying a gacc and its new vax rate, for example list(gacc = "NM-SWC", rate = 0.2)
 #' @param vax_efficacy Proportion of vaccinated agents that become immune
+#' @param vax_df Data frame with specified number of agents to vaccinate at each time step
 #' @param R0 Basic reproduction parameter
 #' @param max_leads Number of desired leads per module
+#' @param prop_overhead_leads Proportion of the overhead module that should be leaders
 #' @param pIR Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
 #' @export
@@ -61,13 +63,18 @@ seasonal_sim <- function(inc_data,
   BA <- ifelse(incl_A == TRUE, R0int*R0 / ( (z*pI/((pIR/DiI) + ((1-pIR)/DiAI))) + ((1-pI)/((pAQ/DiAQ) + ((1-pAQ)/DiAI))) ), 0)
   BI <- ifelse(incl_A == TRUE, R0int*BA*z, R0/DiI)
 
+  # Pre-processing / clean up of inc_id and mod_id data frame
+  mod_data <- clean_mods(mod_data)
+  inc_data$res_gacc <- clean_gacc(inc_data, inc_info)
+
   # Setting up the agent dataframe
   agent_df <- mk_agents(inc_data, mod_data, 1)
-  agent_df$res_gacc <- clean_gacc(inc_data, inc_info)
-  agent_df$mod_id <- clean_mods(agent_df$mod_id)
+  # agent_df$res_gacc <- clean_gacc(inc_data, inc_info)
+  # agent_df$mod_id <- clean_mods(agent_df$mod_id)
   agent_df$leader[agent_df$res_id %in% assign_roles(agent_df, max_leads, prop_overhead_leads)] <- TRUE
   agent_df$vaccinated <- FALSE
   agent_df$vax_rate <- vax_rate
+
   if (!is.null(varying_vax)){
     agent_df$vax_rate[agent_df$res_gacc %in% varying_vax$gacc] <- varying_vax$rate
   }
@@ -86,14 +93,14 @@ seasonal_sim <- function(inc_data,
   while (t < tend) {
     # recording outputs
     agent_df$time <- t
-    outputs[[t]] <- agent_df
+    outputs[[t]] <- dplyr::count(agent_df, "res_gacc", "state", "leader", "quarantine", "vaccinated")
 
     # Mobs and Demobs
     new_df <- agent_df
     new_df$inc_id <- inc_data[[t + 2]]
     new_df$mod_id <- mod_data[[t + 2]]
 
-    new_df$mod_id <- clean_mods(new_df$mod_id)
+    # new_df$mod_id <- clean_mods(new_df$mod_id) # moved to pre-processing
     new_df$leader[new_df$inc_id != agent_df$inc_id] <- FALSE
     new_df$leader[new_df$res_id %in% assign_roles(new_df, max_leads, prop_overhead_leads)] <- TRUE
 
@@ -103,7 +110,7 @@ seasonal_sim <- function(inc_data,
       expose_leads(agent_df, BI, BA, exp_thres, delta_t),
       expose_off_fire(agent_df, eir)
     )
-    # print(exposed_res_ids)
+
     if (!is.null(exposed_res_ids)) {
       new_df$state[which(new_df$res_id %in% exposed_res_ids)] <- "E"
     }

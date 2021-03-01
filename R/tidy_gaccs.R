@@ -1,7 +1,6 @@
 #' Translate inc_id into inc_gacc
 #' @param inc_id numeric incident ID
 #' @param inc_info data frame containing seasonal information on incidents
-#' @export
 inc_id_to_gacc <- function(inc_id, inc_info) {
   if (inc_id == 0) {
     "None"
@@ -12,7 +11,6 @@ inc_id_to_gacc <- function(inc_id, inc_info) {
 
 #' Find the first mobilization for an agent/res_id
 #' @param res_data A data frame with
-#' @export
 find_first_mob <- function(res_data) {
   out <- apply(
     res_data, 1,

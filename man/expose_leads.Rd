@@ -4,18 +4,12 @@
 \alias{expose_leads}
 \title{Find exposed leaders by unique fire (inc_id)}
 \usage{
-expose_leads(input_df, BI, BA, exp_thres = 0, delta_t = 1)
+expose_leads(input_df, ...)
 }
 \arguments{
 \item{input_df}{Input data frame}
 
-\item{BI}{Beta for Symptomatic}
-
-\item{BA}{Beta for Asymptomatic}
-
-\item{exp_thres}{Exposure threshold}
-
-\item{delta_t}{Time step}
+\item{...}{Exposure params to pass to find_exposed_in_leads}
 }
 \value{
 Vector of resource ID's that have been newly exposed

@@ -16,14 +16,15 @@ seasonal_sim(
   R_init = 0,
   I_init = 0,
   vax_init = 0,
-  vax_rate = 0.01,
+  vax_rate = 0,
   varying_vax = NULL,
   vax_efficacy = 0.95,
+  vax_df = NULL,
   R0 = 1.4,
   max_leads = 2,
   prop_overhead_leads = 0.5,
   pIR = 0.2,
-  pAQ = 0.3
+  pAQ = 0
 )
 }
 \arguments{
@@ -55,9 +56,13 @@ seasonal_sim(
 
 \item{vax_efficacy}{Proportion of vaccinated agents that become immune}
 
+\item{vax_df}{Data frame with specified number of agents to vaccinate at each time step}
+
 \item{R0}{Basic reproduction parameter}
 
 \item{max_leads}{Number of desired leads per module}
+
+\item{prop_overhead_leads}{Proportion of the overhead module that should be leaders}
 
 \item{pIR}{Probability that Symptomatic agents do not quarantine}
 

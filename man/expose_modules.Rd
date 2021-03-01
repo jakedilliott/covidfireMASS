@@ -4,18 +4,12 @@
 \alias{expose_modules}
 \title{Find exposed agents by unique module (inc_id x mod_id)}
 \usage{
-expose_modules(input_df, BA, BI, exp_thres = 0, delta_t = 1)
+expose_modules(input_df, ...)
 }
 \arguments{
 \item{input_df}{Input data frame}
 
-\item{BA}{Beta for Asymptomatic}
-
-\item{BI}{Beta for Symptomatic}
-
-\item{exp_thres}{Exposure threshold}
-
-\item{delta_t}{Time step}
+\item{...}{Exposure params to pass to find_exposed_in_mod; BA, BI, exp_thres, delta_t}
 }
 \value{
 Vector of resource ID's that have been newly exposed

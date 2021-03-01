@@ -2,7 +2,8 @@
 
 export("%+=%")
 export(clean_gacc)
-export(find_first_mob)
-export(inc_id_to_gacc)
+export(clean_mods)
+export(find_exposed_in_leads)
+export(find_exposed_in_mod)
 export(modular_quarantine)
 export(seasonal_sim)
