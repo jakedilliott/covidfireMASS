@@ -70,7 +70,7 @@ vaccinate <- function(input_df, overhead_ids = NULL, method, plan, efficacy) {
     function(sub_pop) {
       num_vaccinated <- length(which(sub_pop$vaccinated))
       candidates <- sub_pop$res_id[!sub_pop$vaccinated &
-                                     !sub_pop$quarantined $
+                                     !sub_pop$quarantine &
                                      sub_pop$inc_id == 0]
 
       if (method == "role") {
