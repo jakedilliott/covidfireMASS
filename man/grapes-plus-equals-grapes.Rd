@@ -2,7 +2,7 @@
 % Please edit documentation in R/increment.R
 \name{\%+=\%}
 \alias{\%+=\%}
-\title{I'm just petty and wanted an increment operator...}
+\title{Increment operator}
 \usage{
 e1 \%+=\% e2
 }
@@ -12,5 +12,5 @@ e1 \%+=\% e2
 \item{e2}{...}
 }
 \description{
-I'm just petty and wanted an increment operator...
+used to increment days in quarantine
 }

@@ -8,23 +8,23 @@ seasonal_sim(
   inc_data,
   mod_data,
   inc_info,
+  overhead_ids = NULL,
   incl_A = TRUE,
   De = 5,
   gamma = 8,
   eir = 0.005,
-  custom_eir = "none",
   R_init = 0,
   I_init = 0,
   vax_init = 0,
-  vax_rate = 0,
-  varying_vax = NULL,
   vax_efficacy = 0.95,
   vax_df = NULL,
-  R0 = 1.4,
+  BI = 0.15,
+  module_multiplier = 4,
   max_leads = 2,
   prop_overhead_leads = 0.5,
-  pIR = 0.2,
-  pAQ = 0
+  pIQ = 0.5,
+  pAQ = 0,
+  .raw = FALSE
 )
 }
 \arguments{
@@ -34,6 +34,8 @@ seasonal_sim(
 
 \item{inc_info}{Additional information on each incident}
 
+\item{overhead_ids}{Which res id's should be considered seasonal overhead (for vaccination purposes)}
+
 \item{incl_A}{Include Asymptomatic, TRUE or FALSE}
 
 \item{De}{Incubation period}
@@ -42,31 +44,29 @@ seasonal_sim(
 
 \item{eir}{Entry infection rate}
 
-\item{custom_eir}{Named list of customized GACC infection rates}
-
 \item{R_init}{Initial number of recovered agents}
 
 \item{I_init}{Initial number of infectious agents}
 
 \item{vax_init}{Initial number of vaccinated agents}
 
-\item{vax_rate}{Percent of total population to vaccinate at each time step}
-
-\item{varying_vax}{Named list specifying a gacc and its new vax rate, for example list(gacc = "NM-SWC", rate = 0.2)}
-
 \item{vax_efficacy}{Proportion of vaccinated agents that become immune}
 
 \item{vax_df}{Data frame with specified number of agents to vaccinate at each time step}
 
-\item{R0}{Basic reproduction parameter}
+\item{BI}{Beta for symptomatic agents}
+
+\item{module_multiplier}{Scales up the infectiousness of agents within crew and equipment modules}
 
 \item{max_leads}{Number of desired leads per module}
 
 \item{prop_overhead_leads}{Proportion of the overhead module that should be leaders}
 
-\item{pIR}{Probability that Symptomatic agents do not quarantine}
+\item{pIQ}{Probability that Symptomatic agents do not quarantine}
 
 \item{pAQ}{Probability that Asymptomatic will be caught and quarantined}
+
+\item{.raw}{If true save all agent data at each timestep, default is FALSE}
 }
 \description{
 Seasonal agent-based model simulation

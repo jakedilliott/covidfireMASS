@@ -4,18 +4,19 @@
 #' @param mod_df data frame containing agent information for a single module
 #' @param BA Beta for Asymptomatic
 #' @param BI Beta for Symptomatic
+#' @param multiplier scalar for increasing R0 within modules
 #' @param exp_thres Exposure threshold
 #' @param delta_t Time step
 #' @returns Vector of resource ID's that have been newly exposed'
 #' @export
-find_exposed_in_mod <- function(mod_df, BA, BI, exp_thres = 0, delta_t = 1) {
+find_exposed_in_mod <- function(mod_df, BA, BI, multiplier, exp_thres = 0, delta_t = 1) {
   if (mod_df$inc_id[1] > 0) {
     non_q <- length(which(!mod_df$quarantine))
     I <- length(which(mod_df$state == "I" & !mod_df$quarantine))
     A <- length(which(mod_df$state == "A" & !mod_df$quarantine))
 
     if (I+A > 0 & non_q > 0) {
-      avg_inf_contacts <- (BI*I + BA*A) * delta_t / non_q
+      avg_inf_contacts <- multiplier * (BI*I + BA*A) * delta_t / non_q
       vnum_inf_contacted <- stats::rpois(nrow(mod_df), avg_inf_contacts)
       mod_df$res_id[which(mod_df$state == "S" &
                             !mod_df$quarantine &

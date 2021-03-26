@@ -4,7 +4,7 @@
 \alias{find_exposed_in_mod}
 \title{Find exposed agents within a single module}
 \usage{
-find_exposed_in_mod(mod_df, BA, BI, exp_thres = 0, delta_t = 1)
+find_exposed_in_mod(mod_df, BA, BI, multiplier, exp_thres = 0, delta_t = 1)
 }
 \arguments{
 \item{mod_df}{data frame containing agent information for a single module}
@@ -12,6 +12,8 @@ find_exposed_in_mod(mod_df, BA, BI, exp_thres = 0, delta_t = 1)
 \item{BA}{Beta for Asymptomatic}
 
 \item{BI}{Beta for Symptomatic}
+
+\item{multiplier}{scalar for increasing R0 within modules}
 
 \item{exp_thres}{Exposure threshold}
 

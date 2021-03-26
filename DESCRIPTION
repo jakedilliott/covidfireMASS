@@ -30,7 +30,8 @@ RoxygenNote: 7.1.1
 Imports:
     stats,
     dplyr,
-    purrr
+    purrr,
+    progress
 Suggests: 
     testthat (>= 3.0.0),
     furrr,

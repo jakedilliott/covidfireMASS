@@ -4,12 +4,12 @@
 \alias{modular_quarantine}
 \title{Module based quarantine operations}
 \usage{
-modular_quarantine(input_df, pIR, pAQ)
+modular_quarantine(input_df, pIQ, pAQ)
 }
 \arguments{
 \item{input_df}{the agent data frame at time t}
 
-\item{pIR}{proportion of infectious symptomatic agents that do not recognize symptoms and therefore do not quarantine}
+\item{pIQ}{proportion of infectious symptomatic agents that do not recognize symptoms and therefore do not quarantine}
 
 \item{pAQ}{proportion if infections asymptomatic agents that are caught by testing or camp screening and therefore quarantine}
 }
