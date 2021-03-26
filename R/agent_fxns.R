@@ -1,27 +1,69 @@
-#' Group overhead modules into 1 module
+#' Initialize agent data frame for simulation input
 #'
-#' @details Solves the problem where incidents had too many unique overhead
-#' modules by changing the all overhead modules to "O-100".
+#' @param inc_assignments daily incident assignment data
+#' @param mod_assignments daily module assignment data
+#' @param inc_info incident information for a whole season
+#' @param time which day of the season should the agents start on
+#' @param nleads number of leads each module should have
+#' @param p_overhead_leads proportion of overhead modules that should be leaders
+#' @param R_init proportion of the population that has already recovered
+#' @param I_init proportion of the population that enters the season infected
+#' @param vax_init proportion of the population that enters the season vaccinated
+#' @param vax_efficacy what proportion of those vaccinated actually become immune
 #'
-#' @param mod_id_df module id assignment data frame
-#' @returns all overhead assignments are changed to "O-100"
+#' @return Agent data frame
 #' @export
-clean_mods <- function(mod_id_df) {
-  purrr::map_dfc(
-    mod_id_df,
-    function(x) {
-      overheads <- grepl("^O-", x)
-      x[overheads] <- "O-100"
-      x
-    }
+agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
+                        nleads, p_overhead_leads,
+                        R_init=0, I_init=0, vax_init=0, vax_efficacy=0.95) {
+  n <- nrow(inc_assignments)
+
+  df <- data.frame(
+    res_id = inc_assignments[["res_id"]],
+    res_gacc = clean_gacc(inc_assignments, inc_info),
+    inc_id = inc_assignments[[time + 2]], # first 2 columns are res_id & res_gacc
+    mod_id = mod_assignments[[time + 2]],
+    leader = vector("logical", n),
+    state = "S",
+    quarantine = vector("logical", n),
+    q_days = 0,
+    vaccinated = vector("logical", n)
   )
+
+  # assign leads
+  df$leader[df$res_id %in% assign_roles(df, nleads, p_overhead_leads)] <- TRUE
+
+  # initial recovered
+  if (R_init > 0) {
+    recovered <- sample(n, R_init * n)
+    df$state[recovered] <- "R"
+  }
+  #initial vaccinated
+  if (vax_init > 0) {
+    vaccinated <- sample(n, round(vax_init * n))
+    immune <- sample(vaccinated, round(vax_efficacy * vax_init)) # deterministic method
+    df$vaccinated[vaccinated] <- TRUE
+    df$state[immune] <- TRUE
+  }
+  # initial infectious
+  if (I_init > 0) {
+    total_infectious <- I_init * n
+    I <- round(total_infectious * 0.4286) # proportion symptomatic
+    infectious <- sample(which(df$state == "S"), total_infectious)
+    df$state[infectious[1:I]] <- "I"
+    df$state[infectious[-(1:I)]] <- "A"
+  }
+
+  return(df)
 }
 
+
 #' Assign roles to agents
+#'
 #' @param input_df data frame containing agent data
 #' @param max_leads number of leads per module
-#' @param prop_overhead_leads proportion of overhead to assign as leads
-assign_roles <- function(input_df, max_leads, prop_overhead_leads) {
+#' @param p_overhead_leads proportion of overhead to assign as leads
+assign_roles <- function(input_df, max_leads, p_overhead_leads) {
   split_df <- split(input_df, paste0(input_df$inc_id, "_", input_df$mod_id))
 
   out <- lapply(
@@ -38,7 +80,7 @@ assign_roles <- function(input_df, max_leads, prop_overhead_leads) {
         mod_df$leader <- FALSE
       } else {
         if ("O-100" %in% mod_df$mod_id) {
-          max_leads <- round(num_in_mod * prop_overhead_leads)
+          max_leads <- round(num_in_mod * p_overhead_leads)
         }
         if (num_in_mod <= max_leads) { # less agents in mod than max_leads
           mod_df$leader <- TRUE
@@ -62,55 +104,4 @@ assign_roles <- function(input_df, max_leads, prop_overhead_leads) {
   return(as.numeric(unlist(out))) # final
 }
 
-#' Find out which agents to vaccinate and assign immunity
-#' @param input_df data frame containing agent roster
-#' @param vax_efficacy proportion of vaccinated agents the gain immunity
-#' @param vax_df 1 row data frame, colnames are res_gaccs, row values are the total number of vaccinated agents after vaccination for that time step. if the vax_df cell for gacc NM-SWC is 100 and 50 agents are already vaccinated, this function will return 50 ids to vaccinate
-#' @returns nested list of res_ids; output$vaccinated and output$immune
-vaccinate <- function(input_df, vax_efficacy = 0.95, vax_df = NULL) {
-  splitby_gacc <- split(input_df, input_df$res_gacc)
 
-  vax_ids <- lapply(
-    splitby_gacc,
-    function(gacc_df) {
-      rate <- gacc_df$vax_rate[1]
-      if (is.null(vax_df)) {
-        num_to_vax <- round(nrow(gacc_df) * rate)
-      } else {
-        num_vaccinated <- length(which(gacc_df$vaccinated))
-        home_gacc <- gacc_df$res_gacc[1]
-        num_to_vax <- vax_df[1, home_gacc] - num_vaccinated
-      }
-      candidates <- gacc_df$res_id[!gacc_df$vaccinated &
-                                     !gacc_df$quarantine &
-                                     gacc_df$inc_id == 0]
-
-      if (length(candidates) < num_to_vax) {
-        candidates
-      } else {
-        sample(candidates, num_to_vax)
-      }
-    }
-  )
-  vax_ids <- as.numeric(unlist(vax_ids))
-  # This method is deterministic, it guarantees that the proportion of
-  # immune agents is equal to the vax_efficacy
-  immune_ids <- sample(vax_ids, round(length(vax_ids) * vax_efficacy))
-
-  return(list(vaccinated=vax_ids, immune=immune_ids))
-}
-
-mk_agents <- function(inc_data, mod_data, day) {
-  total <- nrow(inc_data)
-
-  data.frame(
-    res_id = inc_data[["res_id"]],
-    res_gacc = inc_data[["res_gacc"]],
-    inc_id = inc_data[[day + 2]], # first 2 columns are res_id & res_gacc
-    mod_id = mod_data[[day + 2]],
-    leader = vector("logical", total),
-    state = "S",
-    quarantine = vector("logical", total),
-    q_days = 0
-    )
-}
