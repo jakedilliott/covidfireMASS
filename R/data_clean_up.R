@@ -70,3 +70,21 @@ inc_id_to_gacc <- function(inc_id, inc_info) {
     inc_info$inc_gacc[inc_info$inc_id == inc_id]
   }
 }
+
+#' Summarise daily module outputs
+#'
+#' @param data Daily sim results
+summarise_daily <- function(data) {
+  smmry <- dplyr::count(dplyr::all_of("time", "inc_id", "quarantined", "vaccinated", "state"))
+  smmry <- tidyr::pivot_wider(smmry, names_from = "state", values_from = "n")
+  states <- c("S", "E", "I", "A", "R")
+  if (ncol(smmry) < 10) {
+    missing <- states[!(states %in% names(smmry))]
+    for (i in missing) {
+      smmry <- dplyr::mutate(smmry, missing = 0)
+      names(smmry[length(smmry)]) <- i
+    }
+  }
+
+  return(smmry)
+}

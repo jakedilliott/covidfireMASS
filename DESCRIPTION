@@ -31,7 +31,8 @@ Imports:
     stats,
     dplyr,
     purrr,
-    progress
+    progress,
+    tidyr
 Suggests: 
     testthat (>= 3.0.0),
     furrr,

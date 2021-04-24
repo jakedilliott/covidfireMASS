@@ -25,6 +25,12 @@
 #' @param pIQ Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
 #' @param .raw If true save all agent data at each timestep, default is FALSE
+#'
+#' @importFrom dplyr count
+#' @importFrom dplyr all_of
+#' @importFrom dplyr bind_rows
+#' @importFrom stats runif
+#'
 #' @export
 seasonal_sim <- function(inc_data,
                          mod_data,
@@ -95,10 +101,8 @@ seasonal_sim <- function(inc_data,
     if (.raw) {
       outputs[[t]] <- agent_df
     } else {
-      outputs[[t]] <- dplyr::count(
-        dplyr::all_of("agent_df", "time", "res_gacc", "state",
-                      "leader", "quarantine", "vaccinated")
-      )
+      summarise_t <- count(agent_df, all_of("time", "inc_id", "state", "quarantine", "vaccinated"))
+      outputs[[t]] <- summarise_t
     }
 
     # Mobs and Demobs
@@ -123,12 +127,12 @@ seasonal_sim <- function(inc_data,
 
     # state changes ----
     # random rolls
-    rE <- stats::runif(N) # draw to become exposed
-    rI <- stats::runif(N) # draw to become Infectious
-    rS <- stats::runif(N) # draw to become symptomatic
-    rQ <- stats::runif(N) # getting caught and moving to quarantine
-    rR <- stats::runif(N) # draw to recover
-    rVax <- stats::runif(N)
+    rE <- runif(N) # draw to become exposed
+    rI <- runif(N) # draw to become Infectious
+    rS <- runif(N) # draw to become symptomatic
+    rQ <- runif(N) # getting caught and moving to quarantine
+    rR <- runif(N) # draw to recover
+    rVax <- runif(N)
 
     pRecover   <- 1 - exp(-(1/gamma) * delta_t) # p of recovery
     pInfectious <- 1 - exp(-(1/De) * delta_t) # p of becoming Infectious
@@ -182,5 +186,5 @@ seasonal_sim <- function(inc_data,
     t <- t + delta_t
   }
 
-  dplyr::bind_rows(outputs)
+  bind_rows(outputs)
 }
