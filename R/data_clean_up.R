@@ -31,14 +31,17 @@ clean_mods <- function(mod_id_df) {
 #' @param inc_info data frame containing information on all the incidents of a season
 #' @export
 clean_gacc <- function(inc_data, inc_info) {
-  missing_gacc <- grepl("^None", inc_data$res_gacc)
+  missing_gacc <- grep("^None", inc_data$res_gacc)
 
-  # retrieve first incident mobilization
-  first_mobs <- find_first_mob(inc_data[missing_gacc, ])
-  # change inc_id into inc_gacc
-  new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
-  # assign the inc_gacc to their res_gacc
-  inc_data$res_gacc[missing_gacc] <- new_res_gacc
+  if (length(missing_gacc) > 0) {
+    # retrieve first incident mobilization
+    first_mobs <- find_first_mob(inc_data[missing_gacc, ])
+    # change inc_id into inc_gacc
+    new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
+    cat("New gacc length: ", length(new_res_gacc)," | Missing gacc length: ", length(missing_gacc), "\n")
+    # assign the inc_gacc to their res_gacc
+    inc_data$res_gacc[missing_gacc] <- new_res_gacc
+  }
 
   as.character(inc_data$res_gacc)
 }
@@ -71,20 +74,32 @@ inc_id_to_gacc <- function(inc_id, inc_info) {
   }
 }
 
-#' Summarise daily module outputs
+#' Count daily stats
 #'
 #' @param data Daily sim results
-summarise_daily <- function(data) {
-  smmry <- dplyr::count(dplyr::all_of("time", "inc_id", "quarantined", "vaccinated", "state"))
-  smmry <- tidyr::pivot_wider(smmry, names_from = "state", values_from = "n")
+count_daily_mwf <- function(data) {
+  out <- dplyr::count(data, time, inc_id, quarantine, vaccinated, state)
+  out <- tidyr::pivot_wider(out, names_from = "state",
+                            values_from = "n", values_fill = 0)
   states <- c("S", "E", "I", "A", "R")
-  if (ncol(smmry) < 10) {
-    missing <- states[!(states %in% names(smmry))]
+  if (ncol(out) < 9) {
+    missing <- states[!(states %in% names(out))]
     for (i in missing) {
-      smmry <- dplyr::mutate(smmry, missing = 0)
-      names(smmry[length(smmry)]) <- i
+      out <- dplyr::mutate(out, missing = 0)
+      names(out)[length(out)] <- i
     }
   }
 
-  return(smmry)
+  return(out)
+}
+
+#' Count daily new infections
+#'
+#' @param agent_df data frame from previous day
+#' @param new_df data frame from current/new day
+count_daily_inf <- function(new_df, agent_df) {
+  new_inf <- new_df[new_df$state == "E" & agent_df$state == "S", ]
+  out <- dplyr::count(new_inf, time, inc_id, quarantine, vaccinated, name = "new_inf")
+
+  return(out)
 }

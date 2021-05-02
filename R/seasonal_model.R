@@ -26,11 +26,6 @@
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
 #' @param .raw If true save all agent data at each timestep, default is FALSE
 #'
-#' @importFrom dplyr count
-#' @importFrom dplyr all_of
-#' @importFrom dplyr bind_rows
-#' @importFrom stats runif
-#'
 #' @export
 seasonal_sim <- function(inc_data,
                          mod_data,
@@ -61,7 +56,7 @@ seasonal_sim <- function(inc_data,
 
   # Parameters ----
   N <- nrow(inc_data)
-  t <- 1
+  t <- 2
   delta_t <- 1
   tend <- ncol(inc_data) - 2 # first 2 cols are res_id and res_gacc
 
@@ -85,28 +80,25 @@ seasonal_sim <- function(inc_data,
   inc_data$res_gacc <- clean_gacc(inc_data, inc_info)
 
   # Setting up the agent dataframe
-  agent_df <- agents_init(inc_data, mod_data, inc_info, 1,
-                          nleads=max_leads, p_overhead_leads=prop_overhead_leads,
-                          R_init=R_init, I_init=I_init, vax_init=vax_init,
-                          vax_efficacy=vax_efficacy)
+  agent_df <- agents_init(inc_data, mod_data, inc_info, time = 1,
+                          nleads = max_leads, p_overhead_leads = prop_overhead_leads,
+                          R_init = R_init, I_init = I_init, vax_init = vax_init,
+                          vax_efficacy = vax_efficacy)
 
   # if (!is.null(varying_vax)){
   #   agent_df$vax_rate[agent_df$res_gacc %in% varying_vax$gacc] <- varying_vax$rate
   # }
 
   outputs <- list() # create outputs list
-  while (t < tend) {
-    # recording outputs
-    agent_df$time <- t
-    if (.raw) {
-      outputs[[t]] <- agent_df
-    } else {
-      summarise_t <- count(agent_df, all_of("time", "inc_id", "state", "quarantine", "vaccinated"))
-      outputs[[t]] <- summarise_t
-    }
+  outputs[[1]] <- dplyr::mutate(count_daily_mwf(agent_df), new_inf = 0)
+
+  while (t < tend + 1) {
+    ### REMINDER!: ###
+    # The while loop starts on day 2!
 
     # Mobs and Demobs
     new_df <- agent_df
+    new_df$time <- t
     new_df$inc_id <- inc_data[[t + 2]]
     new_df$mod_id <- mod_data[[t + 2]]
 
@@ -127,12 +119,12 @@ seasonal_sim <- function(inc_data,
 
     # state changes ----
     # random rolls
-    rE <- runif(N) # draw to become exposed
-    rI <- runif(N) # draw to become Infectious
-    rS <- runif(N) # draw to become symptomatic
-    rQ <- runif(N) # getting caught and moving to quarantine
-    rR <- runif(N) # draw to recover
-    rVax <- runif(N)
+    rE <- stats::runif(N) # draw to become exposed
+    rI <- stats::runif(N) # draw to become Infectious
+    rS <- stats::runif(N) # draw to become symptomatic
+    rQ <- stats::runif(N) # getting caught and moving to quarantine
+    rR <- stats::runif(N) # draw to recover
+    rVax <- stats::runif(N)
 
     pRecover   <- 1 - exp(-(1/gamma) * delta_t) # p of recovery
     pInfectious <- 1 - exp(-(1/De) * delta_t) # p of becoming Infectious
@@ -158,7 +150,7 @@ seasonal_sim <- function(inc_data,
     }
 
     # Quarantine operations
-    new_df$days_q[which(agent_df$quarantine)] %+=% 1 # increment q_days
+    new_df$q_days[which(agent_df$quarantine)] %+=% 1 # increment q_days
 
     # Agents leave isolation only if they have been isolated a minimum of days
     # and they are Susceptible or Recovered
@@ -179,12 +171,20 @@ seasonal_sim <- function(inc_data,
                                      efficacy = vax_efficacy)
     }
     new_df$vaccinated[new_df$res_id %in% vaccinated_agents$vaccinated] <- TRUE
-    new_df$state [new_df$res_id %in% vaccinated_agents$immune] <- "R"
+    new_df$state [new_df$res_id %in% vaccinated_agents$immune &
+                    new_df$state == "S"] <- "R"
+
+    # recording outputs
+    daily_mwf <- count_daily_mwf(new_df)
+    daily_inf <- count_daily_inf(new_df, agent_df)
+    outputs[[t]] <- dplyr::left_join(daily_mwf, daily_inf)
 
     # clean up
     agent_df <- new_df
     t <- t + delta_t
   }
 
-  bind_rows(outputs)
+  outputs <- dplyr::bind_rows(outputs)
+  outputs[is.na(outputs)] <- 0
+  return(outputs)
 }

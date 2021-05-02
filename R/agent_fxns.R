@@ -18,7 +18,7 @@ agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
                         R_init=0, I_init=0, vax_init=0, vax_efficacy=0.95) {
   n <- nrow(inc_assignments)
 
-  df <- data.frame(
+  df <- tibble::tibble(
     res_id = inc_assignments[["res_id"]],
     res_gacc = clean_gacc(inc_assignments, inc_info),
     inc_id = inc_assignments[[time + 2]], # first 2 columns are res_id & res_gacc
@@ -27,7 +27,8 @@ agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
     state = "S",
     quarantine = vector("logical", n),
     q_days = 0,
-    vaccinated = vector("logical", n)
+    vaccinated = vector("logical", n),
+    time   = time
   )
 
   # assign leads
