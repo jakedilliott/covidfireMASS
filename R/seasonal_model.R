@@ -24,7 +24,7 @@
 #' @param prop_overhead_leads Proportion of the overhead module that should be leaders
 #' @param pIQ Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
-#' @param .raw If true save all agent data at each timestep, default is FALSE
+#' @param raw If true save all agent data at each timestep, default is FALSE
 #'
 #' @export
 seasonal_sim <- function(inc_data,
@@ -50,7 +50,7 @@ seasonal_sim <- function(inc_data,
                          prop_overhead_leads = 0.5,
                          pIQ = 0.5,
                          pAQ = 0,
-                         .raw = FALSE) {
+                         raw = FALSE) {
 
   # set.seed(123)
 
@@ -90,7 +90,11 @@ seasonal_sim <- function(inc_data,
   # }
 
   outputs <- list() # create outputs list
-  outputs[[1]] <- dplyr::mutate(count_daily_mwf(agent_df), new_inf = 0)
+  if (raw) {
+    outputs[[1]] <- agent_df
+  } else {
+    outputs[[1]] <- dplyr::mutate(count_daily_mwf(agent_df), new_inf = 0)
+  }
 
   while (t < tend + 1) {
     ### REMINDER!: ###
@@ -102,7 +106,7 @@ seasonal_sim <- function(inc_data,
     new_df$inc_id <- inc_data[[t + 2]]
     new_df$mod_id <- mod_data[[t + 2]]
 
-    # new_df$mod_id <- clean_mods(new_df$mod_id) # moved to pre-processing
+    # Assigning leads
     new_df$leader[new_df$inc_id != agent_df$inc_id] <- FALSE
     new_df$leader[new_df$res_id %in% assign_roles(new_df, max_leads, prop_overhead_leads)] <- TRUE
 
@@ -119,31 +123,29 @@ seasonal_sim <- function(inc_data,
 
     # state changes ----
     # random rolls
-    rE <- stats::runif(N) # draw to become exposed
-    rI <- stats::runif(N) # draw to become Infectious
-    rS <- stats::runif(N) # draw to become symptomatic
-    rQ <- stats::runif(N) # getting caught and moving to quarantine
-    rR <- stats::runif(N) # draw to recover
-    rVax <- stats::runif(N)
+    rE <- stats::runif(N)   # draw to become exposed
+    rI <- stats::runif(N)   # draw to become Infectious
+    rS <- stats::runif(N)   # draw to become symptomatic
+    rQ <- stats::runif(N)   # getting caught and moving to quarantine
+    rR <- stats::runif(N)   # draw to recover
+    rVax <- stats::runif(N) # draw to vaccinate
 
     pRecover   <- 1 - exp(-(1/gamma) * delta_t) # p of recovery
-    pInfectious <- 1 - exp(-(1/De) * delta_t) # p of becoming Infectious
+    pInfectious <- 1 - exp(-(1/De) * delta_t)   # p of becoming Infectious
 
     # After incubation period Exposed move to Infected or Asymptomatic
     new_df$state[which(agent_df$state == "E" & rI < pInfectious & rS < pI)] <- "I"
     new_df$state[which(agent_df$state == "E" & rI < pInfectious & rS > pI)] <- "A"
 
-    # Infected(Symptomatic) recognize symptoms and quarantine or don't catch
+    # Symptomatic recognize symptoms and quarantine or don't recognize
     # symptoms and recover
     new_df$state[which(agent_df$state == "I" & rR < pRecover)] <- "R"
-    # new_df$quarantine[which(agent_df$state == "I" & rQ < pIQ)] <- TRUE
 
     # Asymptomatic are caught by testing/screening and quarantine or they are
     # not caught and recover
     new_df$state[which(agent_df$state == "A" & rR < pRecover)] <- "R"
-    # new_df$quarantine[which(agent_df$state == "A" & rQ < pAQ)] <- TRUE
 
-    # module quarantine
+    # Modular quarantine operations
     res_ids_to_q <- modular_quarantine(agent_df, pIQ, pAQ)
     if (!is.null(res_ids_to_q) & length(res_ids_to_q) > 0) {
       new_df$quarantine[which(agent_df$res_id %in% res_ids_to_q)] <- TRUE
@@ -171,13 +173,17 @@ seasonal_sim <- function(inc_data,
                                      efficacy = vax_efficacy)
     }
     new_df$vaccinated[new_df$res_id %in% vaccinated_agents$vaccinated] <- TRUE
-    new_df$state [new_df$res_id %in% vaccinated_agents$immune &
-                    new_df$state == "S"] <- "R"
+    new_df$state[new_df$res_id %in% vaccinated_agents$immune &
+                   new_df$state == "S"] <- "R"
 
     # recording outputs
-    daily_mwf <- count_daily_mwf(new_df)
-    daily_inf <- count_daily_inf(new_df, agent_df)
-    outputs[[t]] <- dplyr::left_join(daily_mwf, daily_inf)
+    if (raw) {
+      outputs[[t]] <- new_df
+    } else {
+      daily_mwf <- count_daily_mwf(new_df)
+      daily_inf <- count_daily_inf(new_df, agent_df)
+      outputs[[t]] <- dplyr::left_join(daily_mwf, daily_inf)
+    }
 
     # clean up
     agent_df <- new_df

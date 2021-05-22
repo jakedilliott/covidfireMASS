@@ -31,22 +31,22 @@ agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
     time   = time
   )
 
-  # assign leads
+  # Assign leads
   df$leader[df$res_id %in% assign_roles(df, nleads, p_overhead_leads)] <- TRUE
 
-  # initial recovered
+  # Initial recovered
   if (R_init > 0) {
     recovered <- sample(n, R_init * n)
     df$state[recovered] <- "R"
   }
-  #initial vaccinated
+  # Initial vaccinated
   if (vax_init > 0) {
     vaccinated <- sample(n, round(vax_init * n))
     immune <- sample(vaccinated, round(vax_efficacy * vax_init)) # deterministic method
     df$vaccinated[vaccinated] <- TRUE
     df$state[immune] <- TRUE
   }
-  # initial infectious
+  # Initial infectious
   if (I_init > 0) {
     total_infectious <- I_init * n
     I <- round(total_infectious * 0.4286) # proportion symptomatic
