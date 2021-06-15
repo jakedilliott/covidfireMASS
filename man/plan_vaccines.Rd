@@ -7,19 +7,28 @@
 plan_vaccines(table, x, y)
 }
 \arguments{
-\item{table}{contigency table created by "table" containing frequency of
+\item{table}{Contingency table created by "table" containing frequency of
 either gaccs or roles}
 
-\item{x}{numeric vector, time steps}
+\item{x}{Numeric vector, time steps}
 
-\item{y}{numeric vector, values from 0-1 specifying proportion of each gacc
+\item{y}{Numeric vector, values from 0-1 specifying proportion of each gacc
 to vaccinate at times corresponding to x}
 }
 \value{
-Vaccine plan where row index = time, colnames = gacc, values = number
+Vaccine plan where row = time, colnames = gacc, values = number
 of agents to vaccinate
 }
 \description{
 Uses the approx function to calculate the number of agents that need to be
 vaccinated during each time step rounded to the nearest whole number.
+}
+\examples{
+\dontrun{
+agent_roles <- find_role_types(mod_id_2017)
+role_table <- table(ifelse(grepl("Overhead", agent_roles), "overhead", "ground"))
+vax_plan <- plan_vaccines(role_table,
+                          x = c(1, 154, 354),
+                          y = c(0.25, 0.50, 0.7))
+}
 }

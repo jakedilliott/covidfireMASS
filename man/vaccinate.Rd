@@ -7,18 +7,18 @@
 vaccinate(input_df, overhead_ids = NULL, method, plan, efficacy)
 }
 \arguments{
-\item{input_df}{data frame containing agent roster}
+\item{input_df}{Data frame containing agent roster}
 
-\item{overhead_ids}{res ids of overhead agents for the purpose of vaccination}
+\item{overhead_ids}{Res ids of overhead agents for the purpose of vaccination}
 
-\item{method}{method of vaccine delivery, either by role or by gacc}
+\item{method}{Method of vaccine delivery, either by role or by gacc}
 
-\item{plan}{vaccination plan}
+\item{plan}{Vaccination plan}
 
-\item{efficacy}{proportion of vaccinated agents the gain immunity}
+\item{efficacy}{Proportion of vaccinated agents the gain immunity}
 }
 \value{
-nested list of res_ids; output$vaccinated and output$immune
+Nested list of res_ids: output$vaccinated and output$immune
 }
 \description{
 Find out which agents to vaccinate using gacc information

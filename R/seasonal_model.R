@@ -1,5 +1,3 @@
-# R/seasonal_model.R
-
 #' Seasonal agent-based model simulation
 #' @param inc_data Resource assignments for incident IDs
 #' @param mod_data Resource assignments for module IDs
@@ -20,39 +18,25 @@
 # @param R0 Basic reproduction parameter
 #' @param BI Beta for symptomatic agents
 #' @param module_multiplier Scales up the infectiousness of agents within crew and equipment modules
-#' @param max_leads Number of desired leads per module
-#' @param prop_overhead_leads Proportion of the overhead module that should be leaders
+#' @param leads Leads per module, can be a proportion (0.5) or whole number (4)
+#' @param p_overhead_leads Proportion of the overhead module that should be leaders
 #' @param pIQ Probability that Symptomatic agents do not quarantine
 #' @param pAQ Probability that Asymptomatic will be caught and quarantined
 #' @param raw If true save all agent data at each timestep, default is FALSE
 #'
 #' @export
-seasonal_sim <- function(inc_data,
-                         mod_data,
-                         inc_info,
-                         overhead_ids = NULL,
-                         incl_A = TRUE,
-                         De = 5,
-                         gamma = 8,
-                         eir = 0.005,
-                         # custom_eir = "none",
-                         R_init = 0,
-                         I_init = 0,
-                         vax_init = 0,
-                         # vax_rate = 0,
-                         # varying_vax = NULL,
-                         vax_efficacy = 0.95,
-                         vax_df = NULL,
-                         # R0 = 1.4,
-                         BI = 0.15,
-                         module_multiplier = 4,
-                         max_leads = 2,
-                         prop_overhead_leads = 0.5,
-                         pIQ = 0.5,
-                         pAQ = 0,
-                         raw = FALSE) {
-
-  # set.seed(123)
+seasonal_sim <- function(inc_data, mod_data, inc_info, overhead_ids = NULL,
+                         incl_A = TRUE, De = 5, gamma = 8, eir = 0.005,
+                         R_init = 0, I_init = 0, vax_init = 0, vax_efficacy = 0.95,
+                         vax_df = NULL, BI = 0.15, module_multiplier = 4,
+                         leads = 2, p_overhead_leads = 0.5, pIQ = 0.5,
+                         pAQ = 0, raw = FALSE) {
+  ## These are depricated or removed inputs, a lot of them can still be found
+  ## in the code their functionality is just commented out
+  # custom_eir = "none",
+  # vax_rate = 0,
+  # varying_vax = NULL,
+  # R0 = 1.4,
 
   # Parameters ----
   N <- nrow(inc_data)
@@ -61,15 +45,15 @@ seasonal_sim <- function(inc_data,
   tend <- ncol(inc_data) - 2 # first 2 cols are res_id and res_gacc
 
   exp_thres <- 0
-  DiI <- 8-De
-  DiAI <- 8
-  Dq <- 10
-  DiAQ <- 3
-  z <- 1.65
   R0int <- 1
-  pI <- 0.4286
-  BA <- (2/3) * BI
-  pIQ <- 1 - ((1-pIQ)^(1/7))
+  DiI   <- 8-De
+  DiAI  <- 8
+  Dq    <- 10
+  DiAQ  <- 3
+  z     <- 1.65
+  pI    <- 0.4286
+  BA    <- (2/3) * BI
+  pIQ   <- 1 - ((1-pIQ)^(1/7))
 
 
   # BA <- ifelse(incl_A == TRUE, R0int*R0 / ( (z*pI/((pIR/DiI) + ((1-pIR)/DiAI))) + ((1-pI)/((pAQ/DiAQ) + ((1-pAQ)/DiAI))) ), 0)
@@ -80,8 +64,8 @@ seasonal_sim <- function(inc_data,
   inc_data$res_gacc <- clean_gacc(inc_data, inc_info)
 
   # Setting up the agent dataframe
-  agent_df <- agents_init(inc_data, mod_data, inc_info, time = 1,
-                          nleads = max_leads, p_overhead_leads = prop_overhead_leads,
+  agent_df <- agents_init(inc_data, mod_data, inc_info,
+                          leads = leads, p_overhead_leads = p_overhead_leads,
                           R_init = R_init, I_init = I_init, vax_init = vax_init,
                           vax_efficacy = vax_efficacy)
 
@@ -97,23 +81,24 @@ seasonal_sim <- function(inc_data,
   }
 
   while (t < tend + 1) {
-    ### REMINDER!: ###
+    ### REMINDER! ###
     # The while loop starts on day 2!
+    # Day one is handled in setup
 
-    # Mobs and Demobs
+    ##### Mobs and Demobs #####
     new_df <- agent_df
     new_df$time <- t
     new_df$inc_id <- inc_data[[t + 2]]
     new_df$mod_id <- mod_data[[t + 2]]
 
-    # Assigning leads
+    ##### Assigning leads #####
     new_df$leader[new_df$inc_id != agent_df$inc_id] <- FALSE
-    new_df$leader[new_df$res_id %in% assign_roles(new_df, max_leads, prop_overhead_leads)] <- TRUE
+    new_df$leader[new_df$res_id %in% assign_roles(new_df, leads, p_overhead_leads)] <- TRUE
 
-    # Exposure operations ----
+    ###### Exposure operations #####
     exposed_res_ids <- c(
       expose_modules(agent_df, BA, BI, module_multiplier, exp_thres, delta_t),
-      expose_leads(agent_df, BI, BA, exp_thres, delta_t),
+      expose_leads(agent_df, BA, BI, exp_thres, delta_t),
       expose_off_fire(agent_df, eir)
     )
 
@@ -121,7 +106,7 @@ seasonal_sim <- function(inc_data,
       new_df$state[which(new_df$res_id %in% exposed_res_ids)] <- "E"
     }
 
-    # state changes ----
+    ##### State Changes #####
     # random rolls
     rE <- stats::runif(N)   # draw to become exposed
     rI <- stats::runif(N)   # draw to become Infectious
@@ -130,8 +115,8 @@ seasonal_sim <- function(inc_data,
     rR <- stats::runif(N)   # draw to recover
     rVax <- stats::runif(N) # draw to vaccinate
 
-    pRecover   <- 1 - exp(-(1/gamma) * delta_t) # p of recovery
-    pInfectious <- 1 - exp(-(1/De) * delta_t)   # p of becoming Infectious
+    pRecover    <- 1 - exp(-(1/gamma) * delta_t) # p of recovery
+    pInfectious <- 1 - exp(-(1/De) * delta_t)    # p of becoming Infectious
 
     # After incubation period Exposed move to Infected or Asymptomatic
     new_df$state[which(agent_df$state == "E" & rI < pInfectious & rS < pI)] <- "I"
@@ -166,11 +151,8 @@ seasonal_sim <- function(inc_data,
     if (is.null(vax_df)) {
       stop("vax_df is missing")
     } else {
-      vaccinated_agents <- vaccinate(agent_df,
-                                     overhead_ids,
-                                     method = vax_df$method,
-                                     plan = vax_df$plan[t, ],
-                                     efficacy = vax_efficacy)
+      vaccinated_agents <- vaccinate(agent_df, overhead_ids, method = vax_df$method,
+                                     plan = vax_df$plan[t, ], efficacy = vax_efficacy)
     }
     new_df$vaccinated[new_df$res_id %in% vaccinated_agents$vaccinated] <- TRUE
     new_df$state[new_df$res_id %in% vaccinated_agents$immune &
@@ -182,7 +164,8 @@ seasonal_sim <- function(inc_data,
     } else {
       daily_mwf <- count_daily_mwf(new_df)
       daily_inf <- count_daily_inf(new_df, agent_df)
-      outputs[[t]] <- dplyr::left_join(daily_mwf, daily_inf)
+      outputs[[t]] <- dplyr::left_join(daily_mwf, daily_inf,
+                                       by = c("time", "inc_id", "quarantine", "vaccinated"))
     }
 
     # clean up

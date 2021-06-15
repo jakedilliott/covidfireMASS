@@ -4,14 +4,17 @@
 \alias{assign_roles}
 \title{Assign roles to agents}
 \usage{
-assign_roles(input_df, max_leads, p_overhead_leads)
+assign_roles(input_df, leads, p_overhead_leads)
 }
 \arguments{
-\item{input_df}{data frame containing agent data}
+\item{input_df}{Data frame containing agent data}
 
-\item{max_leads}{number of leads per module}
+\item{leads}{Number of leads per module}
 
-\item{p_overhead_leads}{proportion of overhead to assign as leads}
+\item{p_overhead_leads}{Proportion of overhead to assign as leads}
+}
+\value{
+Vector of agents that need to be assigned as leaders
 }
 \description{
 Assign roles to agents

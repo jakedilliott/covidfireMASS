@@ -9,10 +9,10 @@ expose_modules(input_df, ...)
 \arguments{
 \item{input_df}{Input data frame}
 
-\item{...}{Exposure params to pass to find_exposed_in_mod; BA, BI, exp_thres, delta_t}
+\item{...}{Exposure parameters to pass to find_exposed_in_mod: BA, BI, exp_thres, delta_t}
 }
 \value{
-Vector of resource ID's that have been newly exposed
+Vector of resource IDs that have been exposed
 }
 \description{
 Find exposed agents by unique module (inc_id x mod_id)

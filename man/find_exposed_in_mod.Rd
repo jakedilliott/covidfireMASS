@@ -7,7 +7,7 @@
 find_exposed_in_mod(mod_df, BA, BI, multiplier, exp_thres = 0, delta_t = 1)
 }
 \arguments{
-\item{mod_df}{data frame containing agent information for a single module}
+\item{mod_df}{Data frame containing agent information for a single module}
 
 \item{BA}{Beta for Asymptomatic}
 
@@ -20,7 +20,7 @@ find_exposed_in_mod(mod_df, BA, BI, multiplier, exp_thres = 0, delta_t = 1)
 \item{delta_t}{Time step}
 }
 \value{
-Vector of resource ID's that have been newly exposed'
+Vector of resource ID's that have been newly exposed
 }
 \description{
 Find exposed agents within a single module

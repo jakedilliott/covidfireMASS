@@ -8,8 +8,8 @@ agents_init(
   inc_assignments,
   mod_assignments,
   inc_info,
-  time,
-  nleads,
+  time = 1,
+  leads,
   p_overhead_leads,
   R_init = 0,
   I_init = 0,
@@ -18,28 +18,28 @@ agents_init(
 )
 }
 \arguments{
-\item{inc_assignments}{daily incident assignment data}
+\item{inc_assignments}{Daily incident assignment data}
 
-\item{mod_assignments}{daily module assignment data}
+\item{mod_assignments}{Daily module assignment data}
 
-\item{inc_info}{incident information for a whole season}
+\item{inc_info}{Incident information for a whole season}
 
-\item{time}{which day of the season should the agents start on}
+\item{time}{Which day of the season should the agents start on}
 
-\item{nleads}{number of leads each module should have}
+\item{leads}{Number of leads each module should have}
 
-\item{p_overhead_leads}{proportion of overhead modules that should be leaders}
+\item{p_overhead_leads}{Proportion of overhead modules that should be leaders}
 
-\item{R_init}{proportion of the population that has already recovered}
+\item{R_init}{Proportion of the population that has already recovered}
 
-\item{I_init}{proportion of the population that enters the season infected}
+\item{I_init}{Proportion of the population that enters the season infected}
 
-\item{vax_init}{proportion of the population that enters the season vaccinated}
+\item{vax_init}{Proportion of the population that enters the season vaccinated}
 
-\item{vax_efficacy}{what proportion of those vaccinated actually become immune}
+\item{vax_efficacy}{What proportion of those vaccinated actually become immune}
 }
 \value{
-Agent data frame
+Initialized agent data frame ready for simulation
 }
 \description{
 Initialize agent data frame for simulation input

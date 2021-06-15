@@ -1,23 +1,26 @@
-# covidfireMASS/R/vaccine_fxns.R
-# author: Jake Dilliott
-# year: 2021
-
-
-
 #' Plan vaccines based on gacc information
 #'
 #' Uses the approx function to calculate the number of agents that need to be
 #' vaccinated during each time step rounded to the nearest whole number.
 #'
-#' @param table contigency table created by "table" containing frequency of
+#' @param table Contingency table created by "table" containing frequency of
 #'     either gaccs or roles
-#' @param x numeric vector, time steps
-#' @param y numeric vector, values from 0-1 specifying proportion of each gacc
-#'     to vaccinate at times corresponding to x
+#' @param x Numeric vector, time steps
+#' @param y Numeric vector, values from 0-1 specifying proportion of each gacc
+#'   to vaccinate at times corresponding to x
 #'
-#' @return Vaccine plan where row index = time, colnames = gacc, values = number
-#'     of agents to vaccinate
+#' @return Vaccine plan where row = time, colnames = gacc, values = number
+#'   of agents to vaccinate
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' agent_roles <- find_role_types(mod_id_2017)
+#' role_table <- table(ifelse(grepl("Overhead", agent_roles), "overhead", "ground"))
+#' vax_plan <- plan_vaccines(role_table,
+#'                           x = c(1, 154, 354),
+#'                           y = c(0.25, 0.50, 0.7))
+#' }
 plan_vaccines <- function(table, x, y) {
   if (length(x) < 2 | length(y) < 2) {
     stop("Inputs 'x' and 'y' must be length 2 or greater")
@@ -43,24 +46,25 @@ plan_vaccines <- function(table, x, y) {
   }
 }
 
-
-
 #' Find out which agents to vaccinate using gacc information
-#' @param input_df data frame containing agent roster
-#' @param overhead_ids res ids of overhead agents for the purpose of vaccination
-#' @param method method of vaccine delivery, either by role or by gacc
-#' @param plan vaccination plan
-#' @param efficacy proportion of vaccinated agents the gain immunity
-#' @returns nested list of res_ids; output$vaccinated and output$immune
+#'
+#' @param input_df Data frame containing agent roster
+#' @param overhead_ids Res ids of overhead agents for the purpose of vaccination
+#' @param method Method of vaccine delivery, either by role or by gacc
+#' @param plan Vaccination plan
+#' @param efficacy Proportion of vaccinated agents the gain immunity
+#'
+#' @returns Nested list of res_ids: output$vaccinated and output$immune
+#' @importFrom rlang .data
 vaccinate <- function(input_df, overhead_ids = NULL, method, plan, efficacy) {
   if (method == "role") {
     if (is.null(overhead_ids)) {
       stop("Overhead agents not specified")
     }
     input_df$role <- ifelse(input_df$res_id %in% overhead_ids, "overhead", "ground")
-    split_df <- split(input_df, input_df$role)
+    split_df <- dplyr::group_split(input_df, .data$role)
   } else if (method == "gacc") {
-    split_df <- split(input_df, input_df$res_gacc)
+    split_df <- dplyr::group_split(input_df, .data$res_gacc)
   } else {
     stop("Incorrect vaccine distribution method specified")
   }
@@ -93,5 +97,5 @@ vaccinate <- function(input_df, overhead_ids = NULL, method, plan, efficacy) {
   # immune agents is equal to the vax_efficacy
   immune_ids <- sample(vax_ids, round(length(vax_ids) * efficacy))
 
-  return(list(vaccinated=vax_ids, immune=immune_ids))
+  return(list("vaccinated" = vax_ids, "immune" = immune_ids))
 }

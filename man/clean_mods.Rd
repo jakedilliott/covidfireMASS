@@ -2,17 +2,18 @@
 % Please edit documentation in R/data_clean_up.R
 \name{clean_mods}
 \alias{clean_mods}
-\title{Group all overhead modules for each incident into 1 module}
+\title{Clean up module data}
 \usage{
 clean_mods(mod_id_df)
 }
 \arguments{
-\item{mod_id_df}{module id assignment data frame}
+\item{mod_id_df}{Module id assignment data frame}
 }
 \value{
-all overhead assignments are changed to "O-100"
+Module ID data frame where all overhead assignments are changed to "O-100"
 }
 \description{
-Solves the problem where incidents had too many unique overhead
-modules by changing the all overhead modules to "O-100".
+The high number of unique overhead module assignments was affecting spread
+dynamics. This function solves the issue by grouping all overhead into a
+single module designated "O-100"
 }

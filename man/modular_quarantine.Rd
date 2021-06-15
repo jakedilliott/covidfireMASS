@@ -9,9 +9,11 @@ modular_quarantine(input_df, pIQ, pAQ)
 \arguments{
 \item{input_df}{the agent data frame at time t}
 
-\item{pIQ}{proportion of infectious symptomatic agents that do not recognize symptoms and therefore do not quarantine}
+\item{pIQ}{proportion of infectious symptomatic agents that do not recognize
+symptoms and therefore do not quarantine}
 
-\item{pAQ}{proportion if infections asymptomatic agents that are caught by testing or camp screening and therefore quarantine}
+\item{pAQ}{proportion if infections asymptomatic agents that are caught by
+testing or camp screening and therefore quarantine}
 }
 \value{
 list of res_ids that will be quarantined at time t+1

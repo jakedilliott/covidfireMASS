@@ -12,7 +12,7 @@ expose_leads(input_df, ...)
 \item{...}{Exposure params to pass to find_exposed_in_leads}
 }
 \value{
-Vector of resource ID's that have been newly exposed
+Vector of resource ID's that have been exposed
 }
 \description{
 Find exposed leaders by unique fire (inc_id)

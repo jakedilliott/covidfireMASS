@@ -1,21 +1,21 @@
 #' Initialize agent data frame for simulation input
 #'
-#' @param inc_assignments daily incident assignment data
-#' @param mod_assignments daily module assignment data
-#' @param inc_info incident information for a whole season
-#' @param time which day of the season should the agents start on
-#' @param nleads number of leads each module should have
-#' @param p_overhead_leads proportion of overhead modules that should be leaders
-#' @param R_init proportion of the population that has already recovered
-#' @param I_init proportion of the population that enters the season infected
-#' @param vax_init proportion of the population that enters the season vaccinated
-#' @param vax_efficacy what proportion of those vaccinated actually become immune
+#' @param inc_assignments Daily incident assignment data
+#' @param mod_assignments Daily module assignment data
+#' @param inc_info Incident information for a whole season
+#' @param time Which day of the season should the agents start on
+#' @param leads Number of leads each module should have
+#' @param p_overhead_leads Proportion of overhead modules that should be leaders
+#' @param R_init Proportion of the population that has already recovered
+#' @param I_init Proportion of the population that enters the season infected
+#' @param vax_init Proportion of the population that enters the season vaccinated
+#' @param vax_efficacy What proportion of those vaccinated actually become immune
 #'
-#' @return Agent data frame
-#' @export
-agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
-                        nleads, p_overhead_leads,
-                        R_init=0, I_init=0, vax_init=0, vax_efficacy=0.95) {
+#' @returns Initialized agent data frame ready for simulation
+agents_init <- function(inc_assignments, mod_assignments, inc_info,
+                        time = 1, leads, p_overhead_leads,
+                        R_init = 0, I_init = 0, vax_init = 0,
+                        vax_efficacy = 0.95) {
   n <- nrow(inc_assignments)
 
   df <- tibble::tibble(
@@ -32,7 +32,7 @@ agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
   )
 
   # Assign leads
-  df$leader[df$res_id %in% assign_roles(df, nleads, p_overhead_leads)] <- TRUE
+  df$leader[df$res_id %in% assign_roles(df, leads, p_overhead_leads)] <- TRUE
 
   # Initial recovered
   if (R_init > 0) {
@@ -61,10 +61,12 @@ agents_init <- function(inc_assignments, mod_assignments, inc_info, time,
 
 #' Assign roles to agents
 #'
-#' @param input_df data frame containing agent data
-#' @param max_leads number of leads per module
-#' @param p_overhead_leads proportion of overhead to assign as leads
-assign_roles <- function(input_df, max_leads, p_overhead_leads) {
+#' @param input_df Data frame containing agent data
+#' @param leads Number of leads per module
+#' @param p_overhead_leads Proportion of overhead to assign as leads
+#'
+#' @returns Vector of agents that need to be assigned as leaders
+assign_roles <- function(input_df, leads, p_overhead_leads) {
   split_df <- split(input_df, paste0(input_df$inc_id, "_", input_df$mod_id))
 
   out <- lapply(
@@ -76,7 +78,14 @@ assign_roles <- function(input_df, max_leads, p_overhead_leads) {
       num_leads <- length(lead_ids)
       num_non_leads <- length(non_lead_ids)
 
-      # only assign roles to agents on a fire
+      # Safely handle proportions and whole numbers
+      if (leads < 1) {
+        max_leads <- ceiling(num_in_mod * leads)
+      } else {
+        max_leads <- leads
+      }
+
+      # only assign roles to agents assigned to a fire
       if (0 %in% mod_df$inc_id) {
         mod_df$leader <- FALSE
       } else {

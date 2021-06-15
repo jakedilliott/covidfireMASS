@@ -4,21 +4,21 @@
 \alias{find_exposed_in_leads}
 \title{Find exposed leads within a single incident}
 \usage{
-find_exposed_in_leads(inc_df, BI, BA, exp_thres = 0, delta_t = 1)
+find_exposed_in_leads(inc_df, BA, BI, exp_thres = 0, delta_t = 1)
 }
 \arguments{
-\item{inc_df}{data frame containing agent information for one incident}
-
-\item{BI}{Beta for Symptomatic}
+\item{inc_df}{Data frame containing agent information for a single incident}
 
 \item{BA}{Beta for Asymptomatic}
+
+\item{BI}{Beta for Symptomatic}
 
 \item{exp_thres}{Exposure threshold}
 
 \item{delta_t}{Time step}
 }
 \value{
-vector of resource ID's to be exposed
+Vector of resource IDs that have been exposed
 }
 \description{
 Find exposed leads within a single incident

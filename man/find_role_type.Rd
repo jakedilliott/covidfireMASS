@@ -7,14 +7,14 @@
 find_role_type(mod_data)
 }
 \arguments{
-\item{mod_data}{module assignment data}
+\item{mod_data}{Module assignment data}
 }
 \value{
-character vector of agent role/module "types" (Overhead, OverheadCrew,
+Character vector of agent role/module "types" (Overhead, OverheadCrew,
 OverheadEngine, OverheadCrewEngine, Crew, CrewEngine, Engine)
 }
 \description{
-Inspired by a fizzbuzz, this function finds which module types each agent has
+Inspired by fizzbuzz, this function finds which module types each agent has
 been on and prints them out
 }
 \examples{

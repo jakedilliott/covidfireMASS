@@ -2,15 +2,18 @@
 % Please edit documentation in R/exposure_fxns.R
 \name{expose_off_fire}
 \alias{expose_off_fire}
-\title{Find exposed agents that are off fire}
+\title{Find agents that were exposed off-fire}
 \usage{
 expose_off_fire(input_df, eir)
 }
 \arguments{
-\item{input_df}{complete agent data frame (all incidents and modules)}
+\item{input_df}{Complete agent data frame (all incidents and modules)}
 
-\item{eir}{entry infection rate, or off fire exposure rate}
+\item{eir}{Entry infection rate, aka off fire exposure rate}
+}
+\value{
+Vector of resource ID's that have been exposed off-fire
 }
 \description{
-Find exposed agents that are off fire
+Find agents that were exposed off-fire
 }

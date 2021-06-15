@@ -7,9 +7,13 @@
 count_daily_inf(new_df, agent_df)
 }
 \arguments{
-\item{new_df}{data frame from current/new day}
+\item{new_df}{Data frame from current/new day}
 
-\item{agent_df}{data frame from previous day}
+\item{agent_df}{Data frame from previous day}
+}
+\value{
+A summary data frame that counts new infections by time, inc_id,
+quarantine status, and vaccinated status
 }
 \description{
 Count daily new infections

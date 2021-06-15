@@ -7,7 +7,10 @@
 find_first_mob(res_data)
 }
 \arguments{
-\item{res_data}{A data frame with}
+\item{res_data}{Vector of all incident assignments for a single res_id}
+}
+\value{
+First mobilization found in the supplied assignment vector
 }
 \description{
 Find the first mobilization for an agent/res_id

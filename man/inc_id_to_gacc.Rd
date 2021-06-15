@@ -7,9 +7,12 @@
 inc_id_to_gacc(inc_id, inc_info)
 }
 \arguments{
-\item{inc_id}{numeric incident ID}
+\item{inc_id}{Numeric incident ID}
 
-\item{inc_info}{data frame containing seasonal information on incidents}
+\item{inc_info}{Data frame containing seasonal information on incidents}
+}
+\value{
+Incident gacc
 }
 \description{
 Translate inc_id into inc_gacc

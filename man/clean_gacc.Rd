@@ -7,11 +7,14 @@
 clean_gacc(inc_data, inc_info)
 }
 \arguments{
-\item{inc_data}{data frame containing daily incident assignments}
+\item{inc_data}{Data frame containing daily incident assignments}
 
-\item{inc_info}{data frame containing information on all the incidents of a season}
+\item{inc_info}{Data frame containing information on all the incidents of a season}
+}
+\value{
+Vector of new agent home gaccs
 }
 \description{
 Agents with missing home gaccs have their home gacc assigned to the gacc of
-the first fire of the season.
+the first fire of the season they are assigned to.
 }

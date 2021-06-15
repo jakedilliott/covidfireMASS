@@ -1,13 +1,12 @@
-# Cleaning up modules
-
-#' Group all overhead modules for each incident into 1 module
+#' Clean up module data
 #'
-#' Solves the problem where incidents had too many unique overhead
-#' modules by changing the all overhead modules to "O-100".
+#' The high number of unique overhead module assignments was affecting spread
+#' dynamics. This function solves the issue by grouping all overhead into a
+#' single module designated "O-100"
 #'
-#' @param mod_id_df module id assignment data frame
-#' @returns all overhead assignments are changed to "O-100"
-#' @export
+#' @param mod_id_df Module id assignment data frame
+#'
+#' @returns Module ID data frame where all overhead assignments are changed to "O-100"
 clean_mods <- function(mod_id_df) {
   purrr::map_dfc(
     mod_id_df,
@@ -19,16 +18,15 @@ clean_mods <- function(mod_id_df) {
   )
 }
 
-
-# Cleaning up gaccs =====
-
 #' Clean up missing gaccs
 #'
 #' Agents with missing home gaccs have their home gacc assigned to the gacc of
-#' the first fire of the season.
+#' the first fire of the season they are assigned to.
 #'
-#' @param inc_data data frame containing daily incident assignments
-#' @param inc_info data frame containing information on all the incidents of a season
+#' @param inc_data Data frame containing daily incident assignments
+#' @param inc_info Data frame containing information on all the incidents of a season
+#'
+#' @returns Vector of new agent home gaccs
 #' @export
 clean_gacc <- function(inc_data, inc_info) {
   missing_gacc <- grep("^None", inc_data$res_gacc)
@@ -38,7 +36,7 @@ clean_gacc <- function(inc_data, inc_info) {
     first_mobs <- find_first_mob(inc_data[missing_gacc, ])
     # change inc_id into inc_gacc
     new_res_gacc <- sapply(first_mobs, inc_id_to_gacc, inc_info = inc_info)
-    cat("New gacc length: ", length(new_res_gacc)," | Missing gacc length: ", length(missing_gacc), "\n")
+    # cat("New gacc length: ", length(new_res_gacc)," | Missing gacc length: ", length(missing_gacc), "\n")
     # assign the inc_gacc to their res_gacc
     inc_data$res_gacc[missing_gacc] <- new_res_gacc
   }
@@ -47,7 +45,10 @@ clean_gacc <- function(inc_data, inc_info) {
 }
 
 #' Find the first mobilization for an agent/res_id
-#' @param res_data A data frame with
+#'
+#' @param res_data Vector of all incident assignments for a single res_id
+#'
+#' @returns First mobilization found in the supplied assignment vector
 find_first_mob <- function(res_data) {
   out <- apply(
     res_data, 1,
@@ -64,8 +65,11 @@ find_first_mob <- function(res_data) {
 }
 
 #' Translate inc_id into inc_gacc
-#' @param inc_id numeric incident ID
-#' @param inc_info data frame containing seasonal information on incidents
+#'
+#' @param inc_id Numeric incident ID
+#' @param inc_info Data frame containing seasonal information on incidents
+#'
+#' @returns Incident gacc
 inc_id_to_gacc <- function(inc_id, inc_info) {
   if (inc_id == 0) {
     "None"
@@ -74,11 +78,17 @@ inc_id_to_gacc <- function(inc_id, inc_info) {
   }
 }
 
-#' Count daily stats
+#' Count daily states
 #'
 #' @param data Daily sim results
+#' @importFrom rlang .data
+#'
+#' @returns Summary data frame in wide format counting the number of agents in
+#'   each state by time, inc_id, quarantine status, and vaccinated status
 count_daily_mwf <- function(data) {
-  out <- dplyr::count(data, time, inc_id, quarantine, vaccinated, state)
+  out <- dplyr::count(data,
+                      .data$time, .data$inc_id, .data$quarantine,
+                      .data$vaccinated, .data$state)
   out <- tidyr::pivot_wider(out, names_from = "state",
                             values_from = "n", values_fill = 0)
   states <- c("S", "E", "I", "A", "R")
@@ -95,11 +105,16 @@ count_daily_mwf <- function(data) {
 
 #' Count daily new infections
 #'
-#' @param agent_df data frame from previous day
-#' @param new_df data frame from current/new day
+#' @param agent_df Data frame from previous day
+#' @param new_df Data frame from current/new day
+#'
+#' @returns A summary data frame that counts new infections by time, inc_id,
+#'   quarantine status, and vaccinated status
+#' @importFrom rlang .data
 count_daily_inf <- function(new_df, agent_df) {
   new_inf <- new_df[new_df$state == "E" & agent_df$state == "S", ]
-  out <- dplyr::count(new_inf, time, inc_id, quarantine, vaccinated, name = "new_inf")
+  out <- dplyr::count(new_inf, name = "new_inf",
+                      .data$time, .data$inc_id, .data$quarantine, .data$vaccinated)
 
   return(out)
 }

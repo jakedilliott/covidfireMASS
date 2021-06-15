@@ -2,13 +2,17 @@
 % Please edit documentation in R/data_clean_up.R
 \name{count_daily_mwf}
 \alias{count_daily_mwf}
-\title{Count daily stats}
+\title{Count daily states}
 \usage{
 count_daily_mwf(data)
 }
 \arguments{
 \item{data}{Daily sim results}
 }
+\value{
+Summary data frame in wide format counting the number of agents in
+each state by time, inc_id, quarantine status, and vaccinated status
+}
 \description{
-Count daily stats
+Count daily states
 }

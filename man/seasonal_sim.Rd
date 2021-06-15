@@ -20,11 +20,11 @@ seasonal_sim(
   vax_df = NULL,
   BI = 0.15,
   module_multiplier = 4,
-  max_leads = 2,
-  prop_overhead_leads = 0.5,
+  leads = 2,
+  p_overhead_leads = 0.5,
   pIQ = 0.5,
   pAQ = 0,
-  .raw = FALSE
+  raw = FALSE
 )
 }
 \arguments{
@@ -58,15 +58,15 @@ seasonal_sim(
 
 \item{module_multiplier}{Scales up the infectiousness of agents within crew and equipment modules}
 
-\item{max_leads}{Number of desired leads per module}
+\item{leads}{Leads per module, can be a proportion (0.5) or whole number (4)}
 
-\item{prop_overhead_leads}{Proportion of the overhead module that should be leaders}
+\item{p_overhead_leads}{Proportion of the overhead module that should be leaders}
 
 \item{pIQ}{Probability that Symptomatic agents do not quarantine}
 
 \item{pAQ}{Probability that Asymptomatic will be caught and quarantined}
 
-\item{.raw}{If true save all agent data at each timestep, default is FALSE}
+\item{raw}{If true save all agent data at each timestep, default is FALSE}
 }
 \description{
 Seasonal agent-based model simulation
