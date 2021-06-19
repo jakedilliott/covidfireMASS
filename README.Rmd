@@ -15,7 +15,6 @@ knitr::opts_chunk$set(
 
 # covidfireMASS
 <!-- badges: start -->
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![license](https://img.shields.io/badge/license-MIT + file LICENSE-lightgrey.svg)](https://choosealicense.com/)
 [![minimal R version](https://img.shields.io/badge/R%3E%3D-`2.10`-6666ff.svg)](https://cran.r-project.org/)
 <!-- badges: end -->
@@ -28,8 +27,11 @@ An Agent-Based Model that simulates COVID dynamics within wildfire firefighter c
 
 You can install the development version of covidfireMASS from [GitHub](https//:github.com) with:
 
-``` r
-devtools::install_github("jakedilliott/covidfireMASS")
+```{r, eval=FALSE}
+if (!require("remotes", character.only = TRUE)) {
+  install.packages("remotes", dependencies = TRUE)
+}
+remotes::install_github("jakedilliott/covidfireMASS")
 ```
 
 ## Necessary Data
@@ -80,49 +82,30 @@ kable(df, caption = "Module Assignments Table")
 ### Incident Information
 
 | inc_id | inc_number | inc_name | inc_gacc | inc_lat | inc_lon | max_team_type | first_day | last_day |
-   
+
 ## Minimal Example
 
-``` r
+```{r, eval=FALSE}
 library(covidfireMASS)
-library(readr)
-library(dplyr)
-library(ggplot2)
 
-#### Import Data ####
-inc_assignments <- read_csv("path/to/inc_assignments.csv")
-mod_assignments <- read_csv("path/to/mod_assignments.csv")
-inc_info <- read.csv("path/to/inc_info.csv")
+# Import Data
+# This example uses a '.rda' file that includes preconfigured input data
+load("sim_inputs_2017_complete.rda")
 
-#### Running Simulations ####
+# Running simulations
 # Default simulation run, see ?seasonal_sim for default inputs
-sim1 <- seasonal_sim(inc_assignments, mod_assignments, inc_info)
+sim1 <- seasonal_sim(inc_id_2017, mod_id_2017, inc_info_2017, overhead_ids_2017,
+                     vax_df = vax_plan_base_2017)
 
-# Reducing vaccination rate for the Southwest GACC
-# and specifying an initial vaccinated population.
-sim2 <- seasonal_sim(inc_assignments, mod_assignments, inc_info,
-                     varying_vax = list(gacc = "NM-SWC", rate = 0.005),
-                     R_init = 5000)
-                     
-sapply(sim2, class)
-
-# Seasonal sim outputs a data frame with the following columns
+# seasonal_sim outputs a data frame with the following columns when the 
+# `raw` option is TRUE:
+#
 # res_id     res_gacc     inc_id     mod_id        leader    state
 # "numeric"  "character"  "numeric"  "character"  "logical"  "character"
 #
 # quarantine  q_days     vaccinated  vax_rate   time 
 # "logical"   "numeric"  "logical"   "numeric"  "numeric"
 
-#### Visualization ####
-# Graphing quarantined work force (i.e. all agents that are on an incident
-# and in quarantine/isolation)
-
-to_plot <- sim2 %>%
-  filter(inc_id > 0, quarantined) %>%
-  count(time, res_gacc)
-  
-p <- ggplot(to_plot, aes(time, n, fill = res_gacc)) +
-  geom_col(position = "stack")
+# If the `raw` options is set to FALSE (the default), a summarised
+# output in a wider format will be returned
 ```
-
-NOTE: ***include example figure with the graph here***
