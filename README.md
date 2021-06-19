@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![DOI](https://zenodo.org/badge/327392364.svg)](https://zenodo.org/badge/latestdoi/327392364)
 [![license](https://img.shields.io/badge/license-MIT%20+%20file%20LICENSE-lightgrey.svg)](https://choosealicense.com/)
 [![minimal R
 version](https://img.shields.io/badge/R%3E%3D-%602.10%60-6666ff.svg)](https://cran.r-project.org/)
